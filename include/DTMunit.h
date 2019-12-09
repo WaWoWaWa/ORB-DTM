@@ -27,6 +27,7 @@ using namespace cv;
 using namespace ORB_SLAM2;
 
 #define sizeofEdgeMatrix 500
+#define MAX_ARROR_SIZE  200
 /**
  * @brief 构建DTM的基本函数
  * @param initGood_matches

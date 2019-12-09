@@ -91,7 +91,7 @@ typename std::vector<typename Delaunay<T>::TriangleType> &Delaunay<T>::Triangula
         for(auto & t : triangles_)
         {
             //std::cout << "Processing " << std::endl << *t << std::endl;
-
+            
             if(t.CircumCircleContains(*p))  //如果包含点 p，那么就要产生新的3条边
             {
                 //std::cout << "Pushing bad triangle " << *t << std::endl;

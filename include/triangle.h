@@ -26,14 +26,17 @@ public:
         return almost_equal(p1, v) || almost_equal(p2, v) || almost_equal(p3, v);
     }
 
-    bool CircumCircleContains(const VertexType &v) const;   //判断一点是否在外接圆内（包括在外接圆上）
+    bool CircumCircleContains(const VertexType &v) ;   //判断一点是否在外接圆内（包括在外接圆上）
     bool ComputeAngle();    // 计算角度  计算相似度
+
 
 //    friend class Edge<T>;
 
     VertexType p1;
     VertexType p2;
     VertexType p3;
+    VertexType circum;
+    VertexType mainpoint;
     EdgeType e1;
     EdgeType e2;
     EdgeType e3;
@@ -42,15 +45,19 @@ public:
 };
 
 template<class T>
-bool Triangle<T>::CircumCircleContains(const Triangle::VertexType &v) const {
+bool Triangle<T>::CircumCircleContains(const Triangle::VertexType &v)  {
     const T ab = p1.norm2();
     const T cd = p2.norm2();
     const T ef = p3.norm2();
 
-    const T circum_x = (ab * (p3.y - p2.y) + cd * (p1.y - p3.y) + ef * (p2.y - p1.y)) / (p1.x * (p3.y - p2.y) + p2.x * (p1.y - p3.y) + p3.x * (p2.y - p1.y));
-    const T circum_y = (ab * (p3.x - p2.x) + cd * (p1.x - p3.x) + ef * (p2.x - p1.x)) / (p1.y * (p3.x - p2.x) + p2.y * (p1.x - p3.x) + p3.y * (p2.x - p1.x));
+    circum.x = (ab * (p3.y - p2.y) + cd * (p1.y - p3.y) + ef * (p2.y - p1.y)) / (p1.x * (p3.y - p2.y) + p2.x * (p1.y - p3.y) + p3.x * (p2.y - p1.y));
+    circum.y = (ab * (p3.x - p2.x) + cd * (p1.x - p3.x) + ef * (p2.x - p1.x)) / (p1.y * (p3.x - p2.x) + p2.y * (p1.x - p3.x) + p3.y * (p2.x - p1.x));
+    circum.x = half(circum.x);
+    circum.y = half(circum.y);
 
-    const VertexType circum(half(circum_x), half(circum_y));    // 圆xin
+    mainpoint.x = (p1.x - circum.x) + (p2.x - circum.x) + (p3.x - circum.x) +circum.x;
+    mainpoint.y = (p1.y - circum.y) + (p2.y - circum.y) + (p3.y - circum.y) +circum.y;
+
     const T circum_radius = p1.dist2(circum);   // 得到当前三角形外接圆的半径
     const T dist = v.dist2(circum);
     return dist <= circum_radius;
