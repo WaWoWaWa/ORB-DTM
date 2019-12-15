@@ -23,8 +23,8 @@ using namespace ORB_SLAM2;
 #define d_max_value 50      // 暴力匹配的阈值
 #define m_max_value 5       // DTM边矩阵相似度阈值
 
-#define d_ransac_value 80
-#define threshold_value 15
+#define d_ransac_value 41
+#define threshold_value 15  // 15
 /**
  * @brief DTM
  * 1.分别对两幅图像进行特征提取；
@@ -35,7 +35,6 @@ using namespace ORB_SLAM2;
 /// 主函数
 int main()
 {
-
 //    struct timespec time1 = {0, 0};       // 用于计时
 //    struct timespec time2 = {0, 0};
     string file1 = "./data/desk1.png";
@@ -62,6 +61,7 @@ int main()
     vector<int> mnFeaturesPerLevel1;     //金字塔每层的特征点数量
     vector<vector<cv::KeyPoint>> mvvKeypoints1;  //每层的特征点
     cv::Mat mDes1;
+//    mDes1.convertTo(mDes1,CV_32F);
     /**************** 图片一：提取特征点信息 ******************/
     auto *orb1 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb1)(first_image,cv::Mat(),mvKeys1,mDescriptors1);
@@ -87,6 +87,7 @@ int main()
     vector<int> mnFeaturesPerLevel2;     //金字塔每层的特征点数量
     vector<vector<cv::KeyPoint>> mvvKeypoints2;  //每层的特征点
     cv::Mat mDes2;
+//    mDes2.convertTo(mDes2,CV_32F);
     /**************** 图片二：提取特征点信息 ******************/
     ORBextractor *orb2 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb2)(second_image,cv::Mat(),mvKeys2,mDescriptors2);
@@ -103,11 +104,13 @@ int main()
     cv::drawKeypoints(mvImageShow2[level], mvKeys2, feature2, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
 
+
     /***************   克隆图片   ******************/
     Mat debugOne   = feature1.clone();
     Mat debugTwo   = feature2.clone();
     /***************   特征匹配   *************/
     vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
+//    vector<DMatch> good_matches( KNNmatchFunc(mDes1, mDes2) );
     /***************  构建DT网络  ******************************/
     vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
     cout <<"size one:\t" << new_matches.size() << endl;
@@ -115,6 +118,15 @@ int main()
     cout << "\n采用RANSAC作为control group的实验结果：" << endl;
 //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
+    cout << control_matches.size() << endl;
+//    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
+
+    Mat beforeOpt;   //滤除‘外点’后
+    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
+    imshow("init group",beforeOpt);
+//    imwrite("./figure/RANSAC.png",afterOpt);
+    waitKey(0);
+
     UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,control_matches);
 //    clock_gettime(CLOCK_REALTIME, &time2);
 //    cout << "time passed is: " << (time2.tv_sec - time1.tv_sec)*1000 + (time2.tv_nsec - time1.tv_nsec)/1000000 << "ms" << endl;

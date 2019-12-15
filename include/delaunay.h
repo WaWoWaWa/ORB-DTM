@@ -170,8 +170,9 @@ void Delaunay<T>::ComputeEdgeMatrix() {
     {
         unsigned long m=p.p1.index;
         unsigned long n=p.p2.index;
-        edgeMatrix_(m, n) = 1;
-        edgeMatrix_(n, m) = 1;
+        edgeMatrix_(m, n) = -1;
+        edgeMatrix_(n, m) = -1;
+        edgeMatrix_(m, m) ++;
     }
 }
 

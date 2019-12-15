@@ -43,5 +43,5 @@ target_link_libraries(orbextract ${PROJECT_NAME})
 add_executable(creatDelaunay example/creatDelaunay.cpp)
 target_link_libraries(creatDelaunay ${PROJECT_NAME})
 
-#add_executable(test example/test.cpp)
-#target_link_libraries(test ${PROJECT_NAME})
+add_executable(test example/createTriangle.cpp)
+target_link_libraries(test ${PROJECT_NAME})

@@ -44,6 +44,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //        cout << "sidelength: " << sideLength << endl;
         if (sideLength < MAX_ARROR_SIZE) {
             circle(feature1, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+//            circle(feature1, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(255, 0, 0));
             arrowedLine(feature1, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
                         1, 8);
         }    }
@@ -144,6 +145,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //        cout << "sidelength: " << sideLength << endl;
         if (sideLength < MAX_ARROR_SIZE) {
             circle(feature3, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+//            circle(feature3, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
             arrowedLine(feature3, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
                         1, 8);
         }
@@ -168,13 +170,14 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
         line(feature4, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
     }
 
-    for(const auto &t : triangles2)
+    for(const auto &t : triangles4)
     {
         double sideLength;
         sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
 //        cout << "sidelength: " << sideLength << endl;
         if (sideLength < MAX_ARROR_SIZE) {
             circle(feature4, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+//            circle(feature4, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
             arrowedLine(feature4, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
                         1, 8);
         }    }
@@ -282,7 +285,7 @@ vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int thres
 {
 //    cout << "\n显示第一次特征匹配的基本信息：" << endl;
     vector<DMatch> matches,good_matches;
-    BFMatcher matcher (NORM_HAMMING);
+    BFMatcher matcher(NORM_HAMMING);
     matcher.match(mDes1,mDes2,matches);
 
     //计算最大与最小距离
@@ -325,6 +328,54 @@ vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int thres
     return good_matches;
 }
 
+/**
+ * @brief 使用KNN匹配
+ * @param mDes1
+ * @param mDes2
+ * @return
+ */
+vector<DMatch> KNNmatchFunc(cv::Mat &mDes1, cv::Mat &mDes2)
+{
+    if( mDes1.type()!=CV_32F )
+    {
+        mDes1.convertTo( mDes1, CV_32F );
+        mDes2.convertTo( mDes2, CV_32F );
+    }
+
+    const float minRatio = 1.f/1.2f;
+    const int k = 2;
+
+    vector<vector<DMatch> > knnmatches;
+    vector<DMatch> good_matches;
+
+//    const Ptr<flann::IndexParams>& indexParams=new flann::KDTreeIndexParams();
+//    const Ptr<flann::SearchParams>& searchParams=new flann::SearchParams() ;
+//    const Ptr<flann::IndexParams>& indexParams = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1);
+
+    FlannBasedMatcher matcher;
+//    matcher
+    matcher.knnMatch(mDes1, mDes2, knnmatches, k);
+
+    for (std::size_t i = 0; i < knnmatches.size(); ++i)
+    {
+        const DMatch& bestMatch = knnmatches[i][0];
+        const DMatch& betterMatch = knnmatches[i][1];
+        float distanceRatio = bestMatch.distance/betterMatch.distance;
+        if (distanceRatio < minRatio)
+            good_matches.emplace_back(bestMatch);
+    }
+
+    sort(good_matches.begin(), good_matches.end(), cmp1);   //排序
+    good_matches.erase(unique(good_matches.begin(),good_matches.end(),cmp2),good_matches.end());    //去重
+
+    // 对新的排列重新赋值index
+    for(int i =0 ;i < good_matches.size();i++)
+    {
+        good_matches[i].imgIdx = i;
+    }
+
+    return good_matches;
+}
 
 /**
  * @brief 封装成函数

@@ -66,6 +66,14 @@ void UpdateKey(const vector<DMatch> &good_matches, const vector<cv::KeyPoint> &m
 vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int threshold);
 
 /**
+ * @brief 使用KNN匹配
+ * @param mDes1
+ * @param mDes2
+ * @return
+ */
+vector<DMatch> KNNmatchFunc(cv::Mat &mDes1_, cv::Mat &mDes2_);
+
+/**
  * @brief 封装成函数
  *
  * 输入：debugOne,mvKeys1,debugTwo,mvKeys2,control_matches
