@@ -45,3 +45,6 @@ target_link_libraries(creatDelaunay ${PROJECT_NAME})
 
 add_executable(test example/createTriangle.cpp)
 target_link_libraries(test ${PROJECT_NAME})
+
+add_executable(demo example/demo.cpp)
+target_link_libraries(demo ${PROJECT_NAME})

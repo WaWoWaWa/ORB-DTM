@@ -108,6 +108,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 
     // 通过DT网络的边矩阵之差的范数，删除列和较大的候选外点集
     vector<DMatch> newGood_matches(initGood_matches);
+
 //    cout << "\nold size:\t" << newGood_matches.size()<<endl;
     for(int i = sizeofEdgeMatrix;i != 0 ;i--)
     {
