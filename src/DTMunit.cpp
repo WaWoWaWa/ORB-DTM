@@ -137,9 +137,9 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 
     for (int row = 0; row < triangles1.size(); ++row) {
 //    int row = 50;
-        line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
-        line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
-        line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+//        line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
+//        line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+//        line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
 
 //    cout << triangles1[row].p1.index
         cout << triangles1[row].p1.index << " , " << triangles1[row].p2.index << " , " << triangles1[row].p3.index << endl;
@@ -147,33 +147,39 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
         bool flag(true);
         for (int i = 0; i < triangles2.size(); ++i) {
             if (similarityMatrix(row, i) >= 0.75 && flag) {
+
+                line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
+                line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+                line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+
+
                 line(feature4, Point(triangles2[i].p1.x, triangles2[i].p1.y),
                      Point(triangles2[i].p2.x, triangles2[i].p2.y), Scalar(0, 0, 255), 1);
                 line(feature4, Point(triangles2[i].p1.x, triangles2[i].p1.y),
                      Point(triangles2[i].p3.x, triangles2[i].p3.y), Scalar(0, 0, 255), 1);
                 line(feature4, Point(triangles2[i].p2.x, triangles2[i].p2.y),
                      Point(triangles2[i].p3.x, triangles2[i].p3.y), Scalar(0, 0, 255), 1);
-                flag = false;
+//                flag = false;
                 newGood_matches.emplace_back(triangles1[row].p1.index, triangles2[i].p1.index , similarityMatrix(row, i));
                 newGood_matches.emplace_back(triangles1[row].p2.index, triangles2[i].p2.index , similarityMatrix(row, i));
                 newGood_matches.emplace_back(triangles1[row].p3.index, triangles2[i].p3.index , similarityMatrix(row, i));
 
                 cout << triangles2[i].p1.index << " , " << triangles2[i].p2.index << " , " << triangles2[i].p3.index << endl;
 
-//            CV_WRAP DMatch(int _queryIdx, int _trainIdx, float _distance);
+                Mat afterOpt;
+                cv::drawMatches(feature3,mvKeys1,feature4,mvKeys2,newGood_matches,afterOpt);
+                imshow("after optimization",afterOpt);
+                cout << "row: " << row << endl;
+                imwrite("./figure/DTM.png",afterOpt);
+                waitKey(0);
+
+                newGood_matches.clear();
+                feature3 = feature3_.clone();
+                feature4 = feature4_.clone();
             }
         }
 
-        Mat afterOpt;
-        cv::drawMatches(feature3,mvKeys1,feature4,mvKeys2,newGood_matches,afterOpt);
-        imshow("after optimization",afterOpt);
-        cout << "row: " << row << endl;
-        imwrite("./figure/DTM.png",afterOpt);
-        waitKey(0);
 
-        newGood_matches.clear();
-        feature3 = feature3_.clone();
-        feature4 = feature4_.clone();
     }
 
     /************ 显示优化后的DT网络 ****************/
@@ -367,7 +373,7 @@ vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int thres
     int temp=0;
     for (int l = 0; l < mDes1.rows; l++)
     {
-        if(matches[l].distance <= threshold )
+        if(matches[l].distance <= (double)threshold )
         {
             matches[l].imgIdx=temp;
             good_matches.emplace_back(matches[l]);

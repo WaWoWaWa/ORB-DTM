@@ -23,7 +23,22 @@ void ComputeSimilarityMatrix(const Delaunay<float > & net1, const Delaunay<float
         {
             double a = SimilarityValue(triangleList1[i], triangleList2[j]);
 //            std::cout << "a="<< a <<std::endl;
-            similarityMatrix(i,j) = (a < 0.75) ? 0 : a; //相似度阈值为0.75
+//            similarityMatrix(i,j) = (a < 0.75) ? 0 : a; //相似度阈值为0.75
+            if (a >= 0.75)
+            {
+                Vertex<float> A(triangleList1[i].mainpoint.x - triangleList1[i].circum.x, triangleList1[i].mainpoint.y - triangleList1[i].circum.y);
+                Vertex<float> B(triangleList2[i].mainpoint.x - triangleList2[i].circum.x, triangleList2[i].mainpoint.y - triangleList2[i].circum.y);
+
+                if (A.x != 0 && A.y != 0 && B.x != 0 && B.y != 0) {
+                    double cos_value = (A.x*B.x+A.y*B.y)/(sqrt(A.x*A.x+A.y*A.y)*sqrt(B.x*B.x+B.y*B.y));
+                    double angle = acos(cos_value);
+
+//                    std::cout << "A(" << A.x << " , " << A.y << ")  B(" << B.x << " , " << B.y << ")" << std::endl;
+//                    std::cout << "cos: " << cos_value << " ,Angle: " << angle << std::endl;
+                    if (angle < 1.4)    //
+                        similarityMatrix(i,j) = a;
+                }
+            }
         }
     }
 }

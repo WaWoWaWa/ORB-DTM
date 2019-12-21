@@ -29,7 +29,6 @@ public:
     bool CircumCircleContains(const VertexType &v) ;   //判断一点是否在外接圆内（包括在外接圆上）
     bool ComputeAngle();    // 计算角度  计算相似度
 
-
 //    friend class Edge<T>;
 
     VertexType p1;
@@ -99,5 +98,7 @@ inline bool almost_equal(const Triangle<T> &t1, const Triangle<T> &t2)
               (almost_equal(t1.p2 , t2.p1) || almost_equal(t1.p2 , t2.p2) || almost_equal(t1.p2 , t2.p3)) &&
               (almost_equal(t1.p3 , t2.p1) || almost_equal(t1.p3 , t2.p2) || almost_equal(t1.p3 , t2.p3));
 }
+
+
 
 #endif
