@@ -21,7 +21,7 @@ using namespace cv;
 using namespace ORB_SLAM2;
 
 #define d_max_value 50      // 暴力匹配的阈值
-#define m_max_value 5       // DTM边矩阵相似度阈值
+#define m_max_value 3       // DTM边矩阵相似度阈值
 
 #define d_ransac_value 41
 #define threshold_value 15  // 15
@@ -118,14 +118,14 @@ int main()
     cout << "\n采用RANSAC作为control group的实验结果：" << endl;
 //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
-    cout << control_matches.size() << endl;
+//    cout << control_matches.size() << endl;
 //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
 
-    Mat beforeOpt;   //滤除‘外点’后
-    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
-    imshow("init group",beforeOpt);
+//    Mat beforeOpt;   //滤除‘外点’后
+//    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
+//    imshow("init group",beforeOpt);
 //    imwrite("./figure/RANSAC.png",afterOpt);
-    waitKey(0);
+//    waitKey(0);
 
     UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,control_matches);
 //    clock_gettime(CLOCK_REALTIME, &time2);

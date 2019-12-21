@@ -164,15 +164,15 @@ typename std::vector<typename Delaunay<T>::TriangleType> &Delaunay<T>::Triangula
 
 template<class T>
 void Delaunay<T>::ComputeEdgeMatrix() {
-    unsigned long count=edges_.size();
+//    unsigned long count=edges_.size();
     edgeMatrix_ = Eigen::MatrixXd::Zero(500, 500);
     for(const auto &p:edges_)
     {
         unsigned long m=p.p1.index;
         unsigned long n=p.p2.index;
-        edgeMatrix_(m, n) = -1;
-        edgeMatrix_(n, m) = -1;
-        edgeMatrix_(m, m) ++;
+        edgeMatrix_(m, n) = 1;
+        edgeMatrix_(n, m) = 1;
+//        edgeMatrix_(m, m) ++;
     }
 }
 
