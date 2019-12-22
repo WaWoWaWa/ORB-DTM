@@ -23,7 +23,8 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     vector<Vertex<float > > points1;
     for(const auto &p:initGood_matches)
     {
-        points1.emplace_back(Vertex<float>(mvKeys1[p.queryIdx].pt.x , mvKeys1[p.queryIdx].pt.y , p.imgIdx ));
+        points1.emplace_back(Vertex<float>(mvKeys1[p.queryIdx].pt.x , mvKeys1[p.queryIdx].pt.y , p.queryIdx ));
+        cout << "id1: " << p.queryIdx << endl;
     }
 
     Delaunay<float> triangulation1;
@@ -37,24 +38,26 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
         line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
     }
 
-    for(const auto &t : triangles1)
-    {
-        double sideLength;
-        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-//        cout << "sidelength: " << sideLength << endl;
-        if (sideLength < MAX_ARROR_SIZE) {
-            circle(feature1, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-//            circle(feature1, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(255, 0, 0));
-            arrowedLine(feature1, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
-                        1, 8);
-        }    }
+//    for(const auto &t : triangles1)
+//    {
+//        double sideLength;
+//        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
+////        cout << "sidelength: " << sideLength << endl;
+//        if (sideLength < MAX_ARROR_SIZE) {
+//            circle(feature1, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+////            circle(feature1, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(255, 0, 0));
+//            arrowedLine(feature1, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
+//                        1, 8);
+//        }
+//    }
 
     ///delaunay two
 //    cout << "DT two:" << endl;
     vector<Vertex<float > > points2;
     for(const auto &p:initGood_matches)
     {
-        points2.emplace_back(Vertex<float>(mvKeys2[p.trainIdx].pt.x , mvKeys2[p.trainIdx].pt.y , p.imgIdx ));
+        points2.emplace_back(Vertex<float>(mvKeys2[p.trainIdx].pt.x , mvKeys2[p.trainIdx].pt.y , p.trainIdx ));
+        cout << "id2: " << p.trainIdx << endl;
     }
 
     Delaunay<float> triangulation2;
@@ -68,16 +71,17 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
         line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
     }
 
-    for(const auto &t : triangles2)
-    {
-        double sideLength;
-        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-//        cout << "sidelength: " << sideLength << endl;
-        if (sideLength < MAX_ARROR_SIZE) {
-            circle(feature2, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-            arrowedLine(feature2, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
-                        1, 8);
-        }    }
+//    for(const auto &t : triangles2)
+//    {
+//        double sideLength;
+//        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
+////        cout << "sidelength: " << sideLength << endl;
+//        if (sideLength < MAX_ARROR_SIZE) {
+//            circle(feature2, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+//            arrowedLine(feature2, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
+//                        1, 8);
+//        }
+//    }
 
     /**************** 显示匹配结果与初始DT网络 ******************/
 //    cout << "\t匹配:" << endl;
@@ -90,14 +94,14 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 
 /*******************  构建边矩阵，并计算相似度(范数)，进行DT网络的优化  *********************/
 //    cout << "\n计算DTM的相关信息：" << endl;
-    Eigen::MatrixXd::Index maxRow,maxCol;
+//    Eigen::MatrixXd::Index maxRow,maxCol;
     Eigen::MatrixXd edgeMatrix = Eigen::MatrixXd::Zero(sizeofEdgeMatrix,sizeofEdgeMatrix);  //ComputeEdgeMatrix() 在此处也修改了 20,20 ，需要同步修改，后期改进此处
     edgeMatrix = triangulation1.GetEdgeMatrix() - triangulation2.GetEdgeMatrix();
     //    double value =0;
     //    value = edgeMatrix_.norm();
     //    cout << "\tvalue: " << value <<  endl;      // 相似度
 
-    edgeMatrix.cwiseAbs().colwise().sum().maxCoeff(&maxRow,&maxCol);    // 边矩阵.绝对值.列.和.最大值(行序号,列序号)
+//    edgeMatrix.cwiseAbs().colwise().sum().maxCoeff(&maxRow,&maxCol);    // 边矩阵.绝对值.列.和.最大值(行序号,列序号)
 
 //    cout << "提取候选外点：\t"  << maxCol << endl;
 //    cout << "显示sum:\n" << edgeMatrix_.cwiseAbs().colwise().sum() << endl;
@@ -110,7 +114,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     vector<DMatch> newGood_matches(initGood_matches);
 
 //    cout << "\nold size:\t" << newGood_matches.size()<<endl;
-    for(int i = sizeofEdgeMatrix;i != 0 ;i--)
+    for(int i = newGood_matches.size();i != 0 ;i--)
     {
         if((edgeMatrix.cwiseAbs().colwise().sum())(0,i-1) >= threshold )
         {
@@ -118,16 +122,17 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
             newGood_matches.erase(newGood_matches.begin()+i-1);
         }
     }
-//    cout << "new size:\t" << newGood_matches.size()<<endl;
+    cout << "new size:\t" << newGood_matches.size()<<endl;
 
     /************ 显示优化后的DT网络 ****************/
+
     if (newGood_matches.empty())
         return newGood_matches;
     ///delaunay three
     std::vector<Vertex<float> > points3;
     for(const auto &g:newGood_matches)
     {
-        points3.emplace_back(Vertex<float>(mvKeys1[g.queryIdx].pt.x , mvKeys1[g.queryIdx].pt.y , g.imgIdx ));
+        points3.emplace_back(Vertex<float>(mvKeys1[g.queryIdx].pt.x , mvKeys1[g.queryIdx].pt.y , g.queryIdx ));
     }
     Delaunay<float> triangulation3;
     const std::vector<Triangle<float> > triangles3 = triangulation3.Triangulate(points3);  //逐点插入法
@@ -139,25 +144,26 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
         line(feature3, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
     }
 
-    for(const auto &t : triangles3)
-    {
-        double sideLength;
-        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-//        cout << "sidelength: " << sideLength << endl;
-        if (sideLength < MAX_ARROR_SIZE) {
-            circle(feature3, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-//            circle(feature3, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
-            arrowedLine(feature3, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
-                        1, 8);
-        }
-    }
+//    for(const auto &t : triangles3)
+//    {
+//        double sideLength;
+//        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
+////        cout << "sidelength: " << sideLength << endl;
+//        if (sideLength < MAX_ARROR_SIZE) {
+//            circle(feature3, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+////            circle(feature3, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
+//            arrowedLine(feature3, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
+//                        1, 8);
+//        }
+//    }
 
     ///delaunay four
+
 //    cout << "\tDT four:" << endl;
     std::vector<Vertex<float> > points4;
     for(const auto &g:newGood_matches)
     {
-        points4.emplace_back(Vertex<float>(mvKeys2[g.trainIdx].pt.x , mvKeys2[g.trainIdx].pt.y , g.imgIdx ));
+        points4.emplace_back(Vertex<float>(mvKeys2[g.trainIdx].pt.x , mvKeys2[g.trainIdx].pt.y , g.trainIdx ));
     }
 
     Delaunay<float> triangulation4;
@@ -171,24 +177,25 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
         line(feature4, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
     }
 
-    for(const auto &t : triangles4)
-    {
-        double sideLength;
-        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-//        cout << "sidelength: " << sideLength << endl;
-        if (sideLength < MAX_ARROR_SIZE) {
-            circle(feature4, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-//            circle(feature4, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
-            arrowedLine(feature4, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
-                        1, 8);
-        }
-    }
+//    for(const auto &t : triangles4)
+//    {
+//        double sideLength;
+//        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
+////        cout << "sidelength: " << sideLength << endl;
+//        if (sideLength < MAX_ARROR_SIZE) {
+//            circle(feature4, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
+////            circle(feature4, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
+//            arrowedLine(feature4, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
+//                        1, 8);
+//        }
+//    }
 
     Mat afterOpt;
     cv::drawMatches(feature3,mvKeys1,feature4,mvKeys2,newGood_matches,afterOpt);
     imshow("after optimization",afterOpt);
     imwrite("./figure/DTM.png",afterOpt);
     waitKey(0);
+
     /***********************************************/
 //    cout << "Finished in function!!!" << endl;
     return newGood_matches;
