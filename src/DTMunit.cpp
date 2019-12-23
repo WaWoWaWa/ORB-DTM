@@ -135,52 +135,113 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //    line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
 //    line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
 
-    for (int row = 0; row < triangles1.size(); ++row) {
-//    int row = 50;
-//        line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
-//        line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
-//        line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+//    for (int row = 0; row < triangles1.size(); ++row) {
+    int row = 51;
+    line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
+    line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+    line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
 
-//    cout << triangles1[row].p1.index
-        cout << triangles1[row].p1.index << " , " << triangles1[row].p2.index << " , " << triangles1[row].p3.index << endl;
+//    cout << triangles1[row].p1.index << " , " << triangles1[row].p2.index << " , " << triangles1[row].p3.index << endl;
+    cout << "("<< triangles1[row].p1.x << " , " << triangles1[row].p1.y << "),index1: " << triangles1[row].p1.index << endl;
+    cout << "("<< triangles1[row].p2.x << " , " << triangles1[row].p2.y << "),index1: " << triangles1[row].p2.index << endl;
+    cout << "("<< triangles1[row].p3.x << " , " << triangles1[row].p3.y << "),index1: " << triangles1[row].p3.index << endl;
 
-        bool flag(true);
-        for (int i = 0; i < triangles2.size(); ++i) {
-            if (similarityMatrix(row, i) >= 0.75 && flag) {
+//    vector<vector<Point> > contour;
+//    vector<Point> pts;
+//    pts.emplace_back(Point(triangles1[row].p1.x,triangles1[row].p1.y));
+//    pts.emplace_back(Point(triangles1[row].p2.x,triangles1[row].p2.y));
+//    pts.emplace_back(Point(triangles1[row].p3.x,triangles1[row].p3.y));
+//    contour.emplace_back(pts);
 
-                line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
-                line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
-                line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
 
 
-                line(feature4, Point(triangles2[i].p1.x, triangles2[i].p1.y),
-                     Point(triangles2[i].p2.x, triangles2[i].p2.y), Scalar(0, 0, 255), 1);
-                line(feature4, Point(triangles2[i].p1.x, triangles2[i].p1.y),
-                     Point(triangles2[i].p3.x, triangles2[i].p3.y), Scalar(0, 0, 255), 1);
-                line(feature4, Point(triangles2[i].p2.x, triangles2[i].p2.y),
-                     Point(triangles2[i].p3.x, triangles2[i].p3.y), Scalar(0, 0, 255), 1);
+//    cv::Mat roiImage(44,73,CV_8U) ;//= feature3(Rect(355,300,73,44));
+//    drawContours(roiImage,contour,0,Scalar::all(255));
+//    feature3.copyTo(roiImage);
+
+    float minx = (triangles1[row].p1.x < triangles1[row].p2.x) ? triangles1[row].p1.x : triangles1[row].p2.x ;
+    minx = (minx < triangles1[row].p3.x) ? minx : triangles1[row].p3.x ;
+
+    float maxx = (triangles1[row].p1.x > triangles1[row].p2.x) ? triangles1[row].p1.x : triangles1[row].p2.x ;
+    maxx = (maxx > triangles1[row].p3.x) ? maxx : triangles1[row].p3.x ;
+
+    float miny = (triangles1[row].p1.y < triangles1[row].p2.y) ? triangles1[row].p1.y : triangles1[row].p2.y ;
+    miny = (miny < triangles1[row].p3.y) ? miny : triangles1[row].p3.y ;
+
+    float maxy = (triangles1[row].p1.y > triangles1[row].p2.y) ? triangles1[row].p1.y : triangles1[row].p2.y ;
+    maxy = (maxy > triangles1[row].p3.y) ? maxy : triangles1[row].p3.y ;
+
+//    cv::Mat roiImage = feature3(Rect(minx,miny,maxx-minx,maxy-miny));
+//    cout << "Size of ROI: " << roiImage.size << endl;
+
+//    cv::Mat mask = Mat::zeros(roiImage.size(),CV_8U);
+//    circle(mask, Point(mask.rows/2, mask.cols/2), 15, Scalar(255), -1, 8);
+
+//    cv::Mat roi = cv::Mat::zeros(roiImage.size(), CV_8UC1);
+    cv::Mat roi = cv::Mat::zeros(feature3.size(), CV_8UC1);
+
+    vector<vector<Point> > contour;
+    vector<Point> pts;
+    pts.emplace_back(Point(triangles1[row].p1.x, triangles1[row].p1.y));
+    pts.emplace_back(Point(triangles1[row].p2.x, triangles1[row].p2.y));
+    pts.emplace_back(Point(triangles1[row].p3.x, triangles1[row].p3.y));
+    contour.emplace_back(pts);
+    drawContours(roi, contour, 0, Scalar::all(255), -1);
+
+
+    cv::Mat dst;
+    feature3.copyTo(dst, roi);
+
+    cv::Mat roiImage = dst(Rect(minx,miny,maxx-minx,maxy-miny));
+
+    imshow("roi",roi);
+    waitKey(0);
+    imshow("roiImage",roiImage);
+    waitKey(0);
+//    imshow("mask",mask);
+//    waitKey(0);
+    imshow("dst",dst);
+    waitKey(0);
+
+
+    /*
+    bool flag(true);
+    for (int i = 0; i < triangles2.size(); ++i) {
+        if (similarityMatrix(row, i) >= 0.75 && flag) {
+
+            line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p2.x, triangles1[row].p2.y), Scalar(0, 0, 255), 1);
+            line(feature3, Point(triangles1[row].p1.x, triangles1[row].p1.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+            line(feature3, Point(triangles1[row].p2.x, triangles1[row].p2.y), Point(triangles1[row].p3.x, triangles1[row].p3.y), Scalar(0, 0, 255), 1);
+
+
+            line(feature4, Point(triangles2[i].p1.x, triangles2[i].p1.y),
+                 Point(triangles2[i].p2.x, triangles2[i].p2.y), Scalar(0, 0, 255), 1);
+            line(feature4, Point(triangles2[i].p1.x, triangles2[i].p1.y),
+                 Point(triangles2[i].p3.x, triangles2[i].p3.y), Scalar(0, 0, 255), 1);
+            line(feature4, Point(triangles2[i].p2.x, triangles2[i].p2.y),
+                 Point(triangles2[i].p3.x, triangles2[i].p3.y), Scalar(0, 0, 255), 1);
 //                flag = false;
-                newGood_matches.emplace_back(triangles1[row].p1.index, triangles2[i].p1.index , similarityMatrix(row, i));
-                newGood_matches.emplace_back(triangles1[row].p2.index, triangles2[i].p2.index , similarityMatrix(row, i));
-                newGood_matches.emplace_back(triangles1[row].p3.index, triangles2[i].p3.index , similarityMatrix(row, i));
+            newGood_matches.emplace_back(triangles1[row].p1.index, triangles2[i].p1.index , similarityMatrix(row, i));
+            newGood_matches.emplace_back(triangles1[row].p2.index, triangles2[i].p2.index , similarityMatrix(row, i));
+            newGood_matches.emplace_back(triangles1[row].p3.index, triangles2[i].p3.index , similarityMatrix(row, i));
 
-                cout << triangles2[i].p1.index << " , " << triangles2[i].p2.index << " , " << triangles2[i].p3.index << endl;
+            cout << triangles2[i].p1.index << " , " << triangles2[i].p2.index << " , " << triangles2[i].p3.index << endl;
 
-                Mat afterOpt;
-                cv::drawMatches(feature3,mvKeys1,feature4,mvKeys2,newGood_matches,afterOpt);
-                imshow("after optimization",afterOpt);
-                cout << "row: " << row << endl;
-                imwrite("./figure/DTM.png",afterOpt);
-                waitKey(0);
+            Mat afterOpt;
+            cv::drawMatches(feature3,mvKeys1,feature4,mvKeys2,newGood_matches,afterOpt);
+            imshow("after optimization",afterOpt);
+            cout << "row: " << row << endl;
+            imwrite("./figure/DTM.png",afterOpt);
+            waitKey(0);
 
-                newGood_matches.clear();
-                feature3 = feature3_.clone();
-                feature4 = feature4_.clone();
-            }
+            newGood_matches.clear();
+            feature3 = feature3_.clone();
+            feature4 = feature4_.clone();
         }
-
-
     }
+*/
+
+//    }
 
     /************ 显示优化后的DT网络 ****************/
     /*
