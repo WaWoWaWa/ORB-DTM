@@ -23,8 +23,8 @@ using namespace ORB_SLAM2;
 #define d_max_value 50      // 暴力匹配的阈值
 #define m_max_value 5       // DTM边矩阵相似度阈值
 
-#define d_ransac_value 41
-#define threshold_value 15  // 15
+#define d_ransac_value 50
+#define threshold_value 4  // 15
 /**
  * @brief DTM
  * 1.分别对两幅图像进行特征提取；
@@ -46,7 +46,7 @@ int main()
     int nFeatures =1000;        // 特征点数量
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
     int nLevels =8;             // 金字塔层数
-    int fIniThFAST =18;         // 提取FAST角点的阈值  两个阈值进行选择
+    int fIniThFAST =18;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
     int fMinThFAST =8;
 
     int level = 0;      // 特定层数得到的源图像
@@ -56,7 +56,8 @@ int main()
     cv::Mat first_image = cv::imread(file1, 0);    // load grayscale image 灰度图
     cv::Mat feature1;
     std::vector<cv::Mat> mvImageShow1;   //图像金字塔
-    vector<cv::KeyPoint> mvKeys1;        //一维特征点
+    vector<cv::KeyPoint> mvKeys1_all;        //一维特征点 所有特征点
+    vector<cv::KeyPoint> mvKeys1;        //一维特征点 最底层的特征点
     cv::Mat mDescriptors1;               //描述子
     vector<int> mnFeaturesPerLevel1;     //金字塔每层的特征点数量
     vector<vector<cv::KeyPoint>> mvvKeypoints1;  //每层的特征点
@@ -64,14 +65,18 @@ int main()
 //    mDes1.convertTo(mDes1,CV_32F);
     /**************** 图片一：提取特征点信息 ******************/
     auto *orb1 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
-    (*orb1)(first_image,cv::Mat(),mvKeys1,mDescriptors1);
+    (*orb1)(first_image,cv::Mat(),mvKeys1_all,mDescriptors1);
+
+    for (auto &p:mvKeys1_all) {
+        if (p.octave == 0)
+            mvKeys1.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+    }
 
     mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
-
     mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
 
-    mvvKeypoints1 = orb1->GetmvvKeypoints();
-    mvKeys1 = mvvKeypoints1[level];
+//    mvvKeypoints1 = orb1->GetmvvKeypoints();
+//    mvKeys1 = mvvKeypoints1[level];
     mDes1 = mDescriptors1.rowRange(0,mnFeaturesPerLevel1[level]).clone();
 
 //    cout <<"\t\tKeyPoints:"<<mnFeaturesPerLevel1[level]<<endl;
@@ -82,7 +87,8 @@ int main()
     cv::Mat second_image = cv::imread(file2, 0);    // load grayscale image 灰度图
     cv::Mat feature2;
     std::vector<cv::Mat> mvImageShow2;   //图像金字塔
-    vector<cv::KeyPoint> mvKeys2;        //一维特征点
+    vector<cv::KeyPoint> mvKeys2_all;        //一维特征点 所有特征点
+    vector<cv::KeyPoint> mvKeys2;        //一维特征点 最底层的特征点
     cv::Mat mDescriptors2;               //描述子
     vector<int> mnFeaturesPerLevel2;     //金字塔每层的特征点数量
     vector<vector<cv::KeyPoint>> mvvKeypoints2;  //每层的特征点
@@ -92,12 +98,17 @@ int main()
     ORBextractor *orb2 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb2)(second_image,cv::Mat(),mvKeys2,mDescriptors2);
 
+    for (auto &p:mvKeys2_all) {
+        if (p.octave == 0)
+            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+    }
+
     mvImageShow2 = orb2->GetImagePyramid();   //获取图像金字塔
 
     mnFeaturesPerLevel2 = orb2->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
 
-    mvvKeypoints2 = orb2->GetmvvKeypoints();
-    mvKeys2 = mvvKeypoints2[level];
+//    mvvKeypoints2 = orb2->GetmvvKeypoints();
+//    mvKeys2 = mvvKeypoints2[level];
     mDes2 = mDescriptors2.rowRange(0,mnFeaturesPerLevel2[level]).clone();
 
 //    cout <<"\t\tKeyPoints:"<<mnFeaturesPerLevel2[level]<<endl;
@@ -110,6 +121,7 @@ int main()
     Mat debugTwo   = feature2.clone();
     /***************   特征匹配   *************/
     vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
+    cout <<"init size:\t" << good_matches.size() << endl;
 //    vector<DMatch> good_matches( KNNmatchFunc(mDes1, mDes2) );
     /***************  构建DT网络  ******************************/
     vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5

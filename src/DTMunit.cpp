@@ -24,7 +24,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     for(const auto &p:initGood_matches)
     {
         points1.emplace_back(Vertex<float>(mvKeys1[p.queryIdx].pt.x , mvKeys1[p.queryIdx].pt.y , p.queryIdx ));
-        cout << "id1: " << p.queryIdx << endl;
+//        cout << "id1: " << p.queryIdx << endl;
     }
 
     Delaunay<float> triangulation1;
@@ -42,10 +42,10 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //    {
 //        double sideLength;
 //        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-////        cout << "sidelength: " << sideLength << endl;
+//        cout << "sidelength: " << sideLength << endl;
 //        if (sideLength < MAX_ARROR_SIZE) {
 //            circle(feature1, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-////            circle(feature1, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(255, 0, 0));
+//            circle(feature1, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(255, 0, 0));
 //            arrowedLine(feature1, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
 //                        1, 8);
 //        }
@@ -57,7 +57,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     for(const auto &p:initGood_matches)
     {
         points2.emplace_back(Vertex<float>(mvKeys2[p.trainIdx].pt.x , mvKeys2[p.trainIdx].pt.y , p.trainIdx ));
-        cout << "id2: " << p.trainIdx << endl;
+//        cout << "id2: " << p.trainIdx << endl;
     }
 
     Delaunay<float> triangulation2;
@@ -75,7 +75,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //    {
 //        double sideLength;
 //        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-////        cout << "sidelength: " << sideLength << endl;
+//        cout << "sidelength: " << sideLength << endl;
 //        if (sideLength < MAX_ARROR_SIZE) {
 //            circle(feature2, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
 //            arrowedLine(feature2, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
@@ -124,6 +124,22 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     }
     cout << "new size:\t" << newGood_matches.size()<<endl;
 
+    double angle(0);
+    auto it=newGood_matches.begin(),ng_end = newGood_matches.end();
+//    for (const auto &p:newGood_matches) {
+    for (;it != ng_end; ++it) {
+//        cout << mvKeys1[p.queryIdx].angle << "\t,\t" << mvKeys2[p.trainIdx].angle << "\t,\t" <<
+//             mvKeys1[p.queryIdx].angle - mvKeys2[p.trainIdx].angle << endl;
+        angle = mvKeys1[it->queryIdx].angle - mvKeys2[it->trainIdx].angle;
+        if (angle > 180)
+            angle -= 360;
+
+        if ( angle < -12 || angle > 12){
+            cout << angle << endl;
+            newGood_matches.erase(it);
+        }
+    }
+
     /************ 显示优化后的DT网络 ****************/
 
     if (newGood_matches.empty())
@@ -148,10 +164,10 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //    {
 //        double sideLength;
 //        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-////        cout << "sidelength: " << sideLength << endl;
+//        cout << "sidelength: " << sideLength << endl;
 //        if (sideLength < MAX_ARROR_SIZE) {
 //            circle(feature3, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-////            circle(feature3, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
+//            circle(feature3, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
 //            arrowedLine(feature3, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
 //                        1, 8);
 //        }
@@ -181,10 +197,10 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //    {
 //        double sideLength;
 //        sideLength = sqrt(  (t.mainpoint.x-t.circum.x)*(t.mainpoint.x-t.circum.x) + (t.mainpoint.y-t.circum.y)*(t.mainpoint.y-t.circum.y)  );
-////        cout << "sidelength: " << sideLength << endl;
+//        cout << "sidelength: " << sideLength << endl;
 //        if (sideLength < MAX_ARROR_SIZE) {
 //            circle(feature4, Point(t.circum.x, t.circum.y), 0.1, Scalar(0, 255, 0));
-////            circle(feature4, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
+//            circle(feature4, Point(t.circum.x, t.circum.y), t.p1.dist(t.circum), Scalar(0, 0, 255));
 //            arrowedLine(feature4, Point(t.circum.x, t.circum.y), Point(t.mainpoint.x, t.mainpoint.y), Scalar(0, 255, 0),
 //                        1, 8);
 //        }
