@@ -37,11 +37,15 @@ int main()
 {
 //    struct timespec time1 = {0, 0};       // 用于计时
 //    struct timespec time2 = {0, 0};
+
     string file1 = "./data/desk1.png";
     string file2 = "./data/desk2.png";
-
 //    string file1 = "./data/flag1.png";
 //    string file2 = "./data/flag2.png";
+//    string file1 = "./data/draw1.png";
+//    string file2 = "./data/draw2.png";
+//    string file1 = "./data/paper1.png";
+//    string file2 = "./data/paper2.png";
     /**************** 配置信息 ******************/
     int nFeatures =1000;        // 特征点数量
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
@@ -120,12 +124,12 @@ int main()
     Mat debugOne   = feature1.clone();
     Mat debugTwo   = feature2.clone();
     /***************   特征匹配   *************/
-    vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
-    cout <<"init size:\t" << good_matches.size() << endl;
+//    vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
+//    cout <<"init size:\t" << good_matches.size() << endl;
 //    vector<DMatch> good_matches( KNNmatchFunc(mDes1, mDes2) );
     /***************  构建DT网络  ******************************/
-    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
-    cout <<"size one:\t" << new_matches.size() << endl;
+//    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
+//    cout <<"size one:\t" << new_matches.size() << endl;
     /***************  RANSAC 实验对照组  ******************************/
     cout << "\n采用RANSAC作为control group的实验结果：" << endl;
 //    clock_gettime(CLOCK_REALTIME, &time1);
@@ -133,11 +137,11 @@ int main()
     cout << control_matches.size() << endl;
 //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
 
-    Mat beforeOpt;   //滤除‘外点’后
-    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
-    imshow("init group",beforeOpt);
+//    Mat beforeOpt;   //滤除‘外点’后
+//    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
+//    imshow("init group",beforeOpt);
 //    imwrite("./figure/RANSAC.png",afterOpt);
-    waitKey(0);
+//    waitKey(0);
 
     UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,control_matches);
 //    clock_gettime(CLOCK_REALTIME, &time2);

@@ -92,6 +92,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     imwrite("./figure/beforeDTM.png",beforeOpt);
     waitKey(0);
 
+    return initGood_matches;
 /*******************  构建边矩阵，并计算相似度(范数)，进行DT网络的优化  *********************/
 //    cout << "\n计算DTM的相关信息：" << endl;
 //    Eigen::MatrixXd::Index maxRow,maxCol;
@@ -410,6 +411,12 @@ vector<DMatch> KNNmatchFunc(cv::Mat &mDes1, cv::Mat &mDes2)
  */
 void UsingRansac(const int threshold_value, const cv::Mat &feature1, const cv::Mat &feature2,const vector<cv::KeyPoint> &mvKeys1, const vector<cv::KeyPoint> &mvKeys2,const vector<DMatch> &control_matches)
 {
+    vector<Vertex<float > > points1,points2;
+//    for(const auto &p:initGood_matches)
+//    {
+
+//        cout << "id1: " << p.queryIdx << endl;
+//    }
     /***************  RANSAC 实验对照组  ******************************/
 //    Mat beforeOpt;
 //    cv::drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt);
@@ -424,26 +431,56 @@ void UsingRansac(const int threshold_value, const cv::Mat &feature1, const cv::M
         trainIdxs[i] = control_matches[i].trainIdx;
     }
 
-    Mat H12;   //变换矩阵
-
     vector<Point2f> CGpoints1; KeyPoint::convert(mvKeys1, CGpoints1, queryIdxs);
     vector<Point2f> CGpoints2; KeyPoint::convert(mvKeys2, CGpoints2, trainIdxs);
-    int ransacReprojThreshold = 5;  //拒绝阈值
+    int ransacReprojThreshold = 10;  //拒绝阈值
 
-    H12 = findHomography( Mat(CGpoints1), Mat(CGpoints2), CV_RANSAC, ransacReprojThreshold );
+    // 计算单应矩阵H
+    Mat homography_matrix = findHomography( Mat(CGpoints1), Mat(CGpoints2), CV_RANSAC, ransacReprojThreshold );
     vector<char> matchesMask( control_matches.size(), 0 );
     Mat points1t;
-    perspectiveTransform(Mat(CGpoints1), points1t, H12);
+    perspectiveTransform(Mat(CGpoints1), points1t, homography_matrix);  // 透视变换处理
     int count = 0;
     for( size_t i1 = 0; i1 < CGpoints1.size(); i1++ )  //保存‘内点’
     {
         if( norm(CGpoints2[i1] - points1t.at<Point2f>((int)i1,0)) <= ransacReprojThreshold ) //给内点做标记
         {
+            points1.emplace_back(Vertex<float>(mvKeys1[control_matches[i1].queryIdx].pt.x , mvKeys1[control_matches[i1].queryIdx].pt.y , control_matches[i1].queryIdx ));
+            points2.emplace_back(Vertex<float>(mvKeys2[control_matches[i1].trainIdx].pt.x , mvKeys2[control_matches[i1].trainIdx].pt.y , control_matches[i1].trainIdx ));
             count++;
             matchesMask[i1] = 1;
         }
     }
     cout << "size of control-group matches: " << count << endl;
+
+    // 计算基础矩阵E Essential
+    Mat essential_matrix = findEssentialMat(Mat(CGpoints1), Mat(CGpoints2));
+    Mat R,t;
+    recoverPose(essential_matrix, Mat(CGpoints1), Mat(CGpoints2), R, t);
+    cout << "essential matrix:\n" << essential_matrix << endl;
+    cout << "R:\n" << R << endl;
+    cout << "t:\n" << t << endl;
+
+
+    ///delaunay one
+    Delaunay<float> triangulation1;
+    const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
+    triangulation1.ComputeEdgeMatrix();
+    const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
+    for(const auto &e : edges1)
+    {
+        line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+    }
+
+    ///delaunay two
+    Delaunay<float> triangulation2;
+    const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
+    triangulation2.ComputeEdgeMatrix();
+    const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
+    for(const auto &e : edges2)
+    {
+        line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+    }
 
     Mat afterOpt;   //滤除‘外点’后
     drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
@@ -451,4 +488,7 @@ void UsingRansac(const int threshold_value, const cv::Mat &feature1, const cv::M
     imwrite("./figure/RANSAC.png",afterOpt);
     waitKey(0);
 //    cout << "Completed in Func!" << endl;
+
+
+
 }
