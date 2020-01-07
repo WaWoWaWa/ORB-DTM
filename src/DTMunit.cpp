@@ -309,15 +309,20 @@ int DescriptorDistance(const cv::Mat &a, const cv::Mat &b)
 // sort()时，自定义的排序条件
 // 用于对vector对象内的指定成员进行排序
 //inline bool cmpTrainIdxUp(const DMatch first, const DMatch second)
-inline bool cmp1(const DMatch first, const DMatch second)
+inline bool cmpTrainIdxUp(const DMatch first, const DMatch second)
 {
     return first.trainIdx < second.trainIdx;
+}
+
+inline bool cmpTrainIdxDown(const DMatch first, const DMatch second)
+{
+    return first.trainIdx > second.trainIdx;
 }
 
 // unique()时，自定义的去重条件
 // 用于对vector对象内的指定成员进行去重
 //inline bool cmpTrainIdxEqual(const DMatch first,const DMatch second)
-inline bool cmp2(const DMatch first,const DMatch second)
+inline bool cmpTrainIdxEqual(const DMatch first,const DMatch second)
 {
     return first.trainIdx == second.trainIdx;
 }
@@ -362,8 +367,8 @@ vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int thres
     }
     temp=0;
 
-    sort(good_matches.begin(), good_matches.end(), cmp1);   //排序
-    good_matches.erase(unique(good_matches.begin(),good_matches.end(),cmp2),good_matches.end());    //去重
+    sort(good_matches.begin(), good_matches.end(), cmpTrainIdxUp);   //排序
+    good_matches.erase(unique(good_matches.begin(),good_matches.end(),cmpTrainIdxEqual),good_matches.end());    //去重
 
     // 对新的排列重新赋值index
     for(int i =0 ;i < good_matches.size();i++)
@@ -411,8 +416,8 @@ vector<DMatch> KNNmatchFunc(cv::Mat &mDes1, cv::Mat &mDes2)
             good_matches.emplace_back(bestMatch);
     }
 
-    sort(good_matches.begin(), good_matches.end(), cmp1);   //排序
-    good_matches.erase(unique(good_matches.begin(),good_matches.end(),cmp2),good_matches.end());    //去重
+    sort(good_matches.begin(), good_matches.end(), cmpTrainIdxUp);   //排序
+    good_matches.erase(unique(good_matches.begin(),good_matches.end(),cmpTrainIdxEqual),good_matches.end());    //去重
 
     // 对新的排列重新赋值index
     for(int i =0 ;i < good_matches.size();i++)
@@ -427,14 +432,19 @@ vector<DMatch> KNNmatchFunc(cv::Mat &mDes1, cv::Mat &mDes2)
 // 用于对vector对象内的指定成员进行排序
 inline bool cmpQueryIdxUp(const DMatch first, const DMatch second)
 {
-    return first.trainIdx < second.trainIdx;
+    return first.queryIdx < second.queryIdx;
+}
+
+inline bool cmpQueryIdxDown(const DMatch first, const DMatch second)
+{
+    return first.queryIdx > second.queryIdx;
 }
 
 // unique()时，自定义的去重条件
 // 用于对vector对象内的指定成员进行去重
 inline bool cmpQueryIdxEqual(const DMatch first,const DMatch second)
 {
-    return first.trainIdx == second.trainIdx;
+    return first.queryIdx == second.queryIdx;
 }
 
 /**
@@ -455,22 +465,53 @@ void UsingRansac(const int threshold_value,
     vector<Vertex<float > > points1,points2;
     vector<cv::KeyPoint> mvKeys1_(mvKeys1), mvKeys2_(mvKeys2);
 
-    cout << "size of mvKeys: " << mvKeys1.size() << " , " << mvKeys2.size() << endl;
-    cout << "size of mvKeys_: " << mvKeys1_.size() << " , " << mvKeys2_.size() << endl;
+//    cout << "size of mvKeys: " << mvKeys1.size() << " , " << mvKeys2.size() << endl;
+//    cout << "size of mvKeys_: " << mvKeys1_.size() << " , " << mvKeys2_.size() << endl;
 
-    for (const auto &p:mvKeys1_)
-    {
-        cout << p.class_id << endl;
-    }
+
+    vector<DMatch> temp_matches(control_matches);
+
+    sort(temp_matches.begin(), temp_matches.end(), cmpQueryIdxDown);   // query ID 降序
+    for (const auto &p:temp_matches)                    // 剔除初始匹配点队
+        mvKeys1_.erase(mvKeys1_.begin()+p.queryIdx);
+
+    sort(temp_matches.begin(), temp_matches.end(), cmpTrainIdxDown);   // train ID 降序
+    for (const auto &p:temp_matches)                    // 剔除初始匹配点队
+        mvKeys2_.erase(mvKeys2_.begin()+p.trainIdx);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    for (const auto &p:mvKeys1_)
+//    {
+//        cout << p.class_id << endl;
+//    }
 
 //    sort(control_matches.begin(), control_matches.end(), cmpQueryIdxUp);   //排序
-    cout << endl;
-    for (auto &p:control_matches)
-    {
-        mvKeys1_.erase(mvKeys1_.begin()+p.queryIdx-1);
-        mvKeys2_.erase(mvKeys2_.begin()+p.trainIdx-1);
-//        cout << "index: " << p.queryIdx << "\t,\t" << p.trainIdx << "\t,\t" << p.distance << endl;
-    }
+//    cout << endl;
+//    for (auto &p:control_matches)
+//    {
+//        mvKeys1_.erase(mvKeys1_.begin()+p.queryIdx-1);
+//        mvKeys2_.erase(mvKeys2_.begin()+p.trainIdx-1);
+////        cout << "index: " << p.queryIdx << "\t,\t" << p.trainIdx << "\t,\t" << p.distance << endl;
+//    }
 
 //    for (auto &p:mvKeys1_)
 //    {
@@ -560,6 +601,8 @@ void UsingRansac(const int threshold_value,
     //    cout << "\nt:\n" << t << endl;
 
     /*********************  使用R,t作为先验,引导特征匹配  ***************************/
+    /*
+
     // 获取尚未匹配的特征点集合     已实现:在内外点判别时,已经进行保存 mvKeys1_ mvKeys2_
 //    cout << "size of mvKey1_: " << mvKeys1_.size() << endl;
 //    cout << "size of mvKey2_: " << mvKeys2_.size() << endl;
@@ -627,13 +670,14 @@ void UsingRansac(const int threshold_value,
 //        drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
 //        imshow("Debug",afterOpt);
 //        waitKey(0);
+
     }
 
 //    Eigen::Vector3d p1(387,139,1);
 //    circle(feature1, cv::Point(p1(0),p1(1)), 10, Scalar(255,0,255));
 //    Eigen::Vector3d p2 = R*p1 + t;
 //    circle(feature2, cv::Point(p2(0),p2(1)), 10, Scalar(255,0,255));
-
+*/
     /****************  构建DT网络  ************************/
     ///delaunay one
 //    Delaunay<float> triangulation1;
@@ -662,10 +706,10 @@ void UsingRansac(const int threshold_value,
     imwrite("./figure/RANSAC.png",afterOpt);
     waitKey(0);
 
-    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
-    Mat newOpt;   //滤除‘外点’后
-    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
-    imshow("newOpt",newOpt);
-    imwrite("./figure/add.png",newOpt);
-    waitKey(0);
+//    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
+//    Mat newOpt;   //滤除‘外点’后
+//    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
+//    imshow("newOpt",newOpt);
+//    imwrite("./figure/add.png",newOpt);
+//    waitKey(0);
 }
