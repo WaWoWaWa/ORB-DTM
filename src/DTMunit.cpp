@@ -514,7 +514,7 @@ void UsingRansac(const int threshold_value,
 //            cout << "index: " << control_matches[i1].queryIdx << "\t,\t" << control_matches[i1].trainIdx << "\t,\t" << control_matches[i1].distance << endl;
 //        }
     }
-    cout << "初始结果: " << count << endl;  // 显示内点数目
+    cout << "\n初始结果: " << count << endl;  // 显示内点数目
 
     /********************  计算基础矩阵E,得到R,t    ****************************/
     // 计算基础矩阵E Essential
@@ -558,11 +558,18 @@ void UsingRansac(const int threshold_value,
             dx = p2(0) - mvKeys2_[i2].pt.x;
             dy = p2(1) - mvKeys2_[i2].pt.y;
             radius = dx*dx + dy*dy;         // 计算距离
-                                            // TO DO: 剔除重复点对 done
+            // TO DO: 剔除重复点对 done
 
             // 对圆形ROI内的特征点,进行进一步处理
             if (radius <= 30*30)
             {
+                Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
+                Mat Debug_two = feature2.clone();
+                circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));
+                circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));
+
+
+
                 Mat d2 = mDes2.row(mvKeys2_[i2].class_id);  // 提取特征点对应的描述子
                 int dist = DescriptorDistance(d1,d2);       // 计算两个描述子之间的汉明距离
 
@@ -575,15 +582,24 @@ void UsingRansac(const int threshold_value,
                 else if (dist < bestDist2)
                     bestDist2 = dist;
 
-                //                arrowedLine(Debug_two, Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y), Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y-30), Scalar(0, 0, 255), 1, 8);
+//                cout << "汉明距离: " << bestDist << endl;
+//                arrowedLine(Debug_two, Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y), Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y-30), Scalar(0, 0, 255), 1, 8);
+
+//                Mat newOpt;   //滤除‘外点’后
+//                drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
+//                imshow("newOpt",newOpt);
+//                waitKey(0);
             }
         }
 
-        if (bestDist <= 50)
+        if (bestDist <= 55)
         {
-            if (bestDist < (float)bestDist2*0.6)
+            if (bestDist < (float)bestDist2*1.0)    // 不应该再使用比值来限制,因为已经限制在很小的ROI之中,比较个数很少
             {
                 new_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[bestIdx2].class_id, bestDist);
+
+//                points1.emplace_back(Vertex<float>(mvKeys1[mvKeys1_[i1].class_id].pt.x , mvKeys1[mvKeys1_[i1].class_id].pt.y , mvKeys1_[i1].class_id ));
+//                points2.emplace_back(Vertex<float>(mvKeys2[mvKeys2_[bestIdx2].class_id].pt.x , mvKeys2[mvKeys2_[bestIdx2].class_id].pt.y , mvKeys2_[bestIdx2].class_id ));
             }
         }
 
@@ -591,25 +607,24 @@ void UsingRansac(const int threshold_value,
 
     /****************  构建DT网络  ************************/
     ///delaunay one
-//    Delaunay<float> triangulation1;
-//    const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
-//    triangulation1.ComputeEdgeMatrix();
-//    const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
-//    for(const auto &e : edges1)
-//    {
-//        line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
-//    }
+//        Delaunay<float> triangulation1;
+//        const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
+//        triangulation1.ComputeEdgeMatrix();
+//        const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
+//        for(const auto &e : edges1)
+//        {
+//            line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+//        }
 
     ///delaunay two
-//    Delaunay<float> triangulation2;
-//    const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
-//    triangulation2.ComputeEdgeMatrix();
-//    const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
-//    for(const auto &e : edges2)
-//    {
-//        line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
-//    }
-
+//        Delaunay<float> triangulation2;
+//        const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
+//        triangulation2.ComputeEdgeMatrix();
+//        const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
+//        for(const auto &e : edges2)
+//        {
+//            line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+//        }
     /*******************  显示匹配结果  **********************/
     Mat afterOpt;   //滤除‘外点’后
     drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
@@ -619,6 +634,7 @@ void UsingRansac(const int threshold_value,
 
     cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
     Mat newOpt;   //滤除‘外点’后
+//    drawMatches(feature1,mvKeys1,feature2,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
     drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
     imshow("newOpt",newOpt);
     imwrite("./figure/add.png",newOpt);
