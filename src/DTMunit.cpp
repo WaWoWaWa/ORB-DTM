@@ -553,6 +553,7 @@ void UsingRansac(const int threshold_value,
 
         float radius(0), dx, dy;
         int bestDist = INT_MAX, bestDist2 = INT_MAX, bestIdx2 = -1;
+        int ROIradius = 30;
         for (size_t i2 = 0; i2 < mvKeys2_.size(); ++i2)
         {
             dx = p2(0) - mvKeys2_[i2].pt.x;
@@ -561,12 +562,12 @@ void UsingRansac(const int threshold_value,
             // TO DO: 剔除重复点对 done
 
             // 对圆形ROI内的特征点,进行进一步处理
-            if (radius <= 30*30)
+            if (radius <= ROIradius*ROIradius)
             {
-                Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
-                Mat Debug_two = feature2.clone();
-                circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));
-                circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));
+//                Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
+//                Mat Debug_two = feature2.clone();
+//                circle(Debug_one, cv::Point(p1(0),p1(1)), ROIradius, Scalar(255,0,255));
+//                circle(Debug_two, cv::Point(p2(0),p2(1)), ROIradius, Scalar(255,0,255));
 
 
 
@@ -584,7 +585,7 @@ void UsingRansac(const int threshold_value,
 
 //                cout << "汉明距离: " << bestDist << endl;
 //                arrowedLine(Debug_two, Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y), Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y-30), Scalar(0, 0, 255), 1, 8);
-
+//
 //                Mat newOpt;   //滤除‘外点’后
 //                drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
 //                imshow("newOpt",newOpt);
@@ -592,7 +593,7 @@ void UsingRansac(const int threshold_value,
             }
         }
 
-        if (bestDist <= 55)
+        if (bestDist <= 70)     // 75
         {
             if (bestDist < (float)bestDist2*1.0)    // 不应该再使用比值来限制,因为已经限制在很小的ROI之中,比较个数很少
             {
@@ -607,20 +608,20 @@ void UsingRansac(const int threshold_value,
 
     /****************  构建DT网络  ************************/
     ///delaunay one
-//        Delaunay<float> triangulation1;
-//        const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
-//        triangulation1.ComputeEdgeMatrix();
-//        const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
+//    Delaunay<float> triangulation1;
+//    const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
+//    triangulation1.ComputeEdgeMatrix();
+//    const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
 //        for(const auto &e : edges1)
 //        {
 //            line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
 //        }
 
     ///delaunay two
-//        Delaunay<float> triangulation2;
-//        const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
-//        triangulation2.ComputeEdgeMatrix();
-//        const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
+//    Delaunay<float> triangulation2;
+//    const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
+//    triangulation2.ComputeEdgeMatrix();
+//    const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
 //        for(const auto &e : edges2)
 //        {
 //            line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
