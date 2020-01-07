@@ -35,7 +35,12 @@ using namespace ORB_SLAM2;
  * @param feature
  * @return newGood_matches
  */
-vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matches , const vector<cv::KeyPoint> &mvKeys1, const vector<cv::KeyPoint> &mvKeys2, cv::Mat &feature1, cv::Mat &feature2 );
+vector<DMatch> ComputeDTMunit(int threshold,
+                              const vector<DMatch> &initGood_matches ,
+                              const vector<cv::KeyPoint> &mvKeys1,
+                              const vector<cv::KeyPoint> &mvKeys2,
+                              cv::Mat &feature1,
+                              cv::Mat &feature2 );
 
 /**
  * @brief 获取剩余点集
@@ -54,15 +59,30 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
  * @param mDes1_new
  * @param mDes2_new
  */
-void UpdateKey(const vector<DMatch> &good_matches, const vector<cv::KeyPoint> &mvKeys1, const vector<cv::KeyPoint> &mvKeys2, const cv::Mat &mDes1, const cv::Mat &mDes2,
-               vector<cv::KeyPoint> &mvKeys1_new, vector<cv::KeyPoint> &mvKeys2_new, cv::Mat &mDes1_new, cv::Mat &mDes2_new);
+void UpdateKey(const vector<DMatch> &good_matches,
+               const vector<cv::KeyPoint> &mvKeys1,
+               const vector<cv::KeyPoint> &mvKeys2,
+               const cv::Mat &mDes1,
+               const cv::Mat &mDes2,
+               vector<cv::KeyPoint> &mvKeys1_new,
+               vector<cv::KeyPoint> &mvKeys2_new,
+               cv::Mat &mDes1_new,
+               cv::Mat &mDes2_new);
 
- /**
-  * @brief 使用BF匹配
-  * @param mDes1
-  * @param mDes2
-  * @return
-  */
+/**
+ * @brief 计算两个描述子之间的汉明距离
+ * @param a
+ * @param b
+ * @return
+ */
+static int DescriptorDistance(const cv::Mat &a, const cv::Mat &b);
+
+/**
+ * @brief 使用BF匹配
+ * @param mDes1
+ * @param mDes2
+ * @return
+ */
 vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int threshold);
 
 /**
@@ -79,7 +99,14 @@ vector<DMatch> KNNmatchFunc(cv::Mat &mDes1_, cv::Mat &mDes2_);
  * 输入：debugOne,mvKeys1,debugTwo,mvKeys2,control_matches
  * 输出：筛选后的匹配数目
  */
-void UsingRansac(int threshold_value,const cv::Mat &feature1, const cv::Mat &feature2,const vector<cv::KeyPoint> &mvKeys1, const vector<cv::KeyPoint> &mvKeys2,const vector<DMatch> &control_matches);
+void UsingRansac(int threshold_value,
+                 const cv::Mat &feature1,
+                 const cv::Mat &feature2,
+                 const vector<cv::KeyPoint> &mvKeys1,
+                 const vector<cv::KeyPoint> &mvKeys2,
+                 const cv::Mat &mDes1,
+                 const cv::Mat &mDes2,
+                 const vector<DMatch> &control_matches);
 
 
 

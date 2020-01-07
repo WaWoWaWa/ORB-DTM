@@ -86,11 +86,12 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
     /**************** 显示匹配结果与初始DT网络 ******************/
 //    cout << "\t匹配:" << endl;
 //    cout << "\t\tmatch:" << initGood_matches.size()<<endl;
-    Mat beforeOpt;
-    cv::drawMatches(feature1,mvKeys1,feature2,mvKeys2,initGood_matches,beforeOpt);
-    imshow("before optimization",beforeOpt);
-    imwrite("./figure/beforeDTM.png",beforeOpt);
-    waitKey(0);
+
+//    Mat beforeOpt;
+//    cv::drawMatches(feature1,mvKeys1,feature2,mvKeys2,initGood_matches,beforeOpt);
+//    imshow("before optimization",beforeOpt);
+//    imwrite("./figure/beforeDTM.png",beforeOpt);
+//    waitKey(0);
 
     return initGood_matches;
 /*******************  构建边矩阵，并计算相似度(范数)，进行DT网络的优化  *********************/
@@ -287,9 +288,27 @@ void UpdateKey(const vector<DMatch> &good_matches, const vector<cv::KeyPoint> &m
 
 }
 
+int DescriptorDistance(const cv::Mat &a, const cv::Mat &b)
+{
+    const int *pa = a.ptr<int32_t>();
+    const int *pb = b.ptr<int32_t>();
+
+    int dist=0;
+
+    for(int i=0; i<8; i++, pa++, pb++)
+    {
+        unsigned  int v = *pa ^ *pb;
+        v = v - ((v >> 1) & 0x55555555);
+        v = (v & 0x33333333) + ((v >> 2) & 0x33333333);
+        dist += (((v + (v >> 4)) & 0xF0F0F0F) * 0x1010101) >> 24;
+    }
+
+    return dist;
+}
 
 // sort()时，自定义的排序条件
 // 用于对vector对象内的指定成员进行排序
+//inline bool cmpTrainIdxUp(const DMatch first, const DMatch second)
 inline bool cmp1(const DMatch first, const DMatch second)
 {
     return first.trainIdx < second.trainIdx;
@@ -297,6 +316,7 @@ inline bool cmp1(const DMatch first, const DMatch second)
 
 // unique()时，自定义的去重条件
 // 用于对vector对象内的指定成员进行去重
+//inline bool cmpTrainIdxEqual(const DMatch first,const DMatch second)
 inline bool cmp2(const DMatch first,const DMatch second)
 {
     return first.trainIdx == second.trainIdx;
@@ -403,27 +423,81 @@ vector<DMatch> KNNmatchFunc(cv::Mat &mDes1, cv::Mat &mDes2)
     return good_matches;
 }
 
+// sort()时，自定义的排序条件
+// 用于对vector对象内的指定成员进行排序
+inline bool cmpQueryIdxUp(const DMatch first, const DMatch second)
+{
+    return first.trainIdx < second.trainIdx;
+}
+
+// unique()时，自定义的去重条件
+// 用于对vector对象内的指定成员进行去重
+inline bool cmpQueryIdxEqual(const DMatch first,const DMatch second)
+{
+    return first.trainIdx == second.trainIdx;
+}
+
 /**
  * @brief 封装成函数
  *
  * 输入：debugOne,mvKeys1,debugTwo,mvKeys2,control_matches
  * 输出：筛选后的匹配数目
  */
-void UsingRansac(const int threshold_value, const cv::Mat &feature1, const cv::Mat &feature2,const vector<cv::KeyPoint> &mvKeys1, const vector<cv::KeyPoint> &mvKeys2,const vector<DMatch> &control_matches)
+void UsingRansac(const int threshold_value,
+                 const cv::Mat &feature1,
+                 const cv::Mat &feature2,
+                 const vector<cv::KeyPoint> &mvKeys1,
+                 const vector<cv::KeyPoint> &mvKeys2,
+                 const cv::Mat &mDes1,
+                 const cv::Mat &mDes2,
+                 const vector<DMatch> &control_matches)
 {
     vector<Vertex<float > > points1,points2;
-//    for(const auto &p:initGood_matches)
+    vector<cv::KeyPoint> mvKeys1_(mvKeys1), mvKeys2_(mvKeys2);
+
+    cout << "size of mvKeys: " << mvKeys1.size() << " , " << mvKeys2.size() << endl;
+    cout << "size of mvKeys_: " << mvKeys1_.size() << " , " << mvKeys2_.size() << endl;
+
+    for (const auto &p:mvKeys1_)
+    {
+        cout << p.class_id << endl;
+    }
+
+//    sort(control_matches.begin(), control_matches.end(), cmpQueryIdxUp);   //排序
+    cout << endl;
+    for (auto &p:control_matches)
+    {
+        mvKeys1_.erase(mvKeys1_.begin()+p.queryIdx-1);
+        mvKeys2_.erase(mvKeys2_.begin()+p.trainIdx-1);
+//        cout << "index: " << p.queryIdx << "\t,\t" << p.trainIdx << "\t,\t" << p.distance << endl;
+    }
+
+//    for (auto &p:mvKeys1_)
 //    {
-
-//        cout << "id1: " << p.queryIdx << endl;
+////        cout << p.class_id << endl;     // 原始的特征点
+//        for (auto &q:control_matches)
+//        {
+////            if (p.class_id == q.queryIdx)
+////                cout << "ERROR" << endl;
+//        }
 //    }
-    /***************  RANSAC 实验对照组  ******************************/
-//    Mat beforeOpt;
-//    cv::drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt);
-//    imshow("before optimization",beforeOpt);
-//    waitKey(0);
 
-//    保存匹配对序号
+//    cout << "\n\nRANSAC:" << endl;
+//    for (auto &q:control_matches)
+//    {
+////        cout << q.queryIdx << endl;
+////            if (p.class_id == q.queryIdx)
+////                cout << "ERROR" << endl;
+//    }
+
+    cout << "size of control_matches: " << control_matches.size() << endl;
+    cout << "size of mvKeys_: " << mvKeys1_.size() << " , " << mvKeys2_.size() << endl;
+
+    Mat Debug_one = feature1.clone();
+    Mat Debug_two = feature2.clone();
+
+    /***************  RANSAC 实验对照组  ******************************/
+    // 保存匹配对序号
     vector<int> queryIdxs( control_matches.size() ), trainIdxs( control_matches.size() );
     for( size_t i = 0; i < control_matches.size(); i++ )
     {
@@ -433,9 +507,12 @@ void UsingRansac(const int threshold_value, const cv::Mat &feature1, const cv::M
 
     vector<Point2f> CGpoints1; KeyPoint::convert(mvKeys1, CGpoints1, queryIdxs);
     vector<Point2f> CGpoints2; KeyPoint::convert(mvKeys2, CGpoints2, trainIdxs);
-    int ransacReprojThreshold = 10;  //拒绝阈值
+    int ransacReprojThreshold = 5;  //拒绝阈值 35
 
-    // 计算单应矩阵H
+//    cout << "Debug: " << CGpoints1.size() << endl;
+    cout << endl << endl;
+
+    // 计算单应矩阵H homography matrix
     Mat homography_matrix = findHomography( Mat(CGpoints1), Mat(CGpoints2), CV_RANSAC, ransacReprojThreshold );
     vector<char> matchesMask( control_matches.size(), 0 );
     Mat points1t;
@@ -445,50 +522,150 @@ void UsingRansac(const int threshold_value, const cv::Mat &feature1, const cv::M
     {
         if( norm(CGpoints2[i1] - points1t.at<Point2f>((int)i1,0)) <= ransacReprojThreshold ) //给内点做标记
         {
+            matchesMask[i1] = 1;    // 做标记,在drawmatch时会当做mask作为参数输入
+            // 取出内点,用于构造DT网络
             points1.emplace_back(Vertex<float>(mvKeys1[control_matches[i1].queryIdx].pt.x , mvKeys1[control_matches[i1].queryIdx].pt.y , control_matches[i1].queryIdx ));
             points2.emplace_back(Vertex<float>(mvKeys2[control_matches[i1].trainIdx].pt.x , mvKeys2[control_matches[i1].trainIdx].pt.y , control_matches[i1].trainIdx ));
             count++;
-            matchesMask[i1] = 1;
+        }
+        else    // 保存外点
+        {
+//            mvKeys1_.emplace_back(mvKeys1[control_matches[i1].queryIdx]);
+//            mvKeys2_.emplace_back(mvKeys2[control_matches[i1].trainIdx]);
+//            cout << "index: " << control_matches[i1].queryIdx << "\t,\t" << control_matches[i1].trainIdx << "\t,\t" << control_matches[i1].distance << endl;
         }
     }
-    cout << "size of control-group matches: " << count << endl;
+    cout << "初始结果: " << count << endl;  // 显示内点数目
 
+    /********************  计算基础矩阵E,得到R,t    ****************************/
     // 计算基础矩阵E Essential
     Mat essential_matrix = findEssentialMat(Mat(CGpoints1), Mat(CGpoints2));
-    Mat R,t;
-    recoverPose(essential_matrix, Mat(CGpoints1), Mat(CGpoints2), R, t);
-    cout << "essential matrix:\n" << essential_matrix << endl;
-    cout << "R:\n" << R << endl;
-    cout << "t:\n" << t << endl;
+    Mat mat_R,mat_t;
+    recoverPose(essential_matrix, Mat(CGpoints1), Mat(CGpoints2), mat_R, mat_t);
+    //    cout << "\nessential matrix:\n" << essential_matrix << endl;
 
-
-    ///delaunay one
-    Delaunay<float> triangulation1;
-    const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
-    triangulation1.ComputeEdgeMatrix();
-    const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
-    for(const auto &e : edges1)
-    {
-        line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+    Eigen::Matrix3d R;
+    for (int i=0; i<mat_R.rows; ++i) {
+        for (int j=0; j<mat_R.cols; ++j) {
+            R(i,j) = mat_R.at<double>(i,j);
+        }
     }
+
+    Eigen::Vector3d t;
+    for (int i=0; i<mat_t.rows; ++i) {
+        t(i,0) = mat_t.at<double>(i,0);
+    }
+
+    //    cout << "\nR:\n" << R << endl;
+    //    cout << "\nt:\n" << t << endl;
+
+    /*********************  使用R,t作为先验,引导特征匹配  ***************************/
+    // 获取尚未匹配的特征点集合     已实现:在内外点判别时,已经进行保存 mvKeys1_ mvKeys2_
+//    cout << "size of mvKey1_: " << mvKeys1_.size() << endl;
+//    cout << "size of mvKey2_: " << mvKeys2_.size() << endl;
+
+    // 实现BFmatcher
+    vector<DMatch> new_matches;
+    for (size_t i1 = 0; i1 < mvKeys1_.size(); ++i1)     // 遍历所有未匹配的特征点mvKeys1_
+    {
+//        Mat Debug_one = feature1.clone();
+//        Mat Debug_two = feature2.clone();
+        Mat d1 = mDes1.row(mvKeys1_[i1].class_id);
+
+        Eigen::Vector3d p1(mvKeys1_[i1].pt.x,mvKeys1_[i1].pt.y,1);
+//        circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));
+        Eigen::Vector3d p2 = R*p1 + t;
+//        circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));
+
+        float radius(0), dx, dy;
+        int bestDist = INT_MAX, bestDist2 = INT_MAX, bestIdx2 = -1;
+        for (size_t i2 = 0; i2 < mvKeys2_.size(); ++i2)
+        {
+            dx = p2(0) - mvKeys2_[i2].pt.x;
+            dy = p2(1) - mvKeys2_[i2].pt.y;
+            radius = dx*dx + dy*dy;         // 计算距离
+                                            // TODO: 剔除重复点对
+
+//            Mat Debug_one = feature1.clone();
+//            Mat Debug_two = feature2.clone();
+//            circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));
+//            circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));
+
+            if (radius <= 30*30)
+            {
+                Mat d2 = mDes2.row(mvKeys2_[i2].class_id);  // 提取特征点对应的描述子
+                int dist = DescriptorDistance(d1,d2);       // 计算两个描述子之间的汉明距离
+
+                if (dist < bestDist)
+                {
+                    bestDist2 = bestDist;
+                    bestDist = dist;
+                    bestIdx2 = i2;
+                }
+                else if (dist < bestDist2)
+                    bestDist2 = dist;
+
+                //                arrowedLine(Debug_two, Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y), Point(mvKeys2_[i2].pt.x, mvKeys2_[i2].pt.y-30), Scalar(0, 0, 255), 1, 8);
+            }
+        }
+
+        if (bestDist <= 50)
+        {
+            if (bestDist < (float)bestDist2*0.6)
+            {
+                new_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[bestIdx2].class_id, bestDist);
+            }
+        }
+//        if (dist <= 30)
+//            new_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[i2].class_id, dist);
+
+
+
+//        cout << endl;
+
+//        Mat afterOpt;   //滤除‘外点’后
+//        drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
+//        imshow("Debug",afterOpt);
+//        waitKey(0);
+    }
+
+//    Eigen::Vector3d p1(387,139,1);
+//    circle(feature1, cv::Point(p1(0),p1(1)), 10, Scalar(255,0,255));
+//    Eigen::Vector3d p2 = R*p1 + t;
+//    circle(feature2, cv::Point(p2(0),p2(1)), 10, Scalar(255,0,255));
+
+    /****************  构建DT网络  ************************/
+    ///delaunay one
+//    Delaunay<float> triangulation1;
+//    const std::vector<Triangle<float> > triangles1 = triangulation1.Triangulate(points1);  //逐点插入法
+//    triangulation1.ComputeEdgeMatrix();
+//    const std::vector<Edge<float> > edges1 = triangulation1.GetEdges();
+//    for(const auto &e : edges1)
+//    {
+//        line(feature1, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+//    }
 
     ///delaunay two
-    Delaunay<float> triangulation2;
-    const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
-    triangulation2.ComputeEdgeMatrix();
-    const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
-    for(const auto &e : edges2)
-    {
-        line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
-    }
+//    Delaunay<float> triangulation2;
+//    const std::vector<Triangle<float> > triangles2 = triangulation2.Triangulate(points2);  //逐点插入法
+//    triangulation2.ComputeEdgeMatrix();
+//    const std::vector<Edge<float> > edges2 = triangulation2.GetEdges();
+//    for(const auto &e : edges2)
+//    {
+//        line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
+//    }
 
+    /*******************  显示匹配结果  **********************/
     Mat afterOpt;   //滤除‘外点’后
     drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
     imshow("control group",afterOpt);
     imwrite("./figure/RANSAC.png",afterOpt);
     waitKey(0);
-//    cout << "Completed in Func!" << endl;
 
-
-
+    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
+    Mat newOpt;   //滤除‘外点’后
+    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
+    imshow("newOpt",newOpt);
+    imwrite("./figure/add.png",newOpt);
+    waitKey(0);
 }

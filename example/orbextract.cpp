@@ -42,16 +42,14 @@ int main()
     string file2 = "./data/desk2.png";
 //    string file1 = "./data/flag1.png";
 //    string file2 = "./data/flag2.png";
-//    string file1 = "./data/draw1.png";
+//    string file1 = "./data/draw1.png";      // 2500 28  15
 //    string file2 = "./data/draw2.png";
-//    string file1 = "./data/paper1.png";
-//    string file2 = "./data/paper2.png";
     /**************** 配置信息 ******************/
-    int nFeatures =1000;        // 特征点数量
+    int nFeatures =800;        // 特征点数量
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
     int nLevels =8;             // 金字塔层数
     int fIniThFAST =18;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
-    int fMinThFAST =8;
+    int fMinThFAST =10;
 
     int level = 0;      // 特定层数得到的源图像
 
@@ -71,9 +69,12 @@ int main()
     auto *orb1 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb1)(first_image,cv::Mat(),mvKeys1_all,mDescriptors1);
 
+    int class_id = 0;
     for (auto &p:mvKeys1_all) {
-        if (p.octave == 0)
-            mvKeys1.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+        if (p.octave == 0) {
+//            mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
+            mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, class_id++));
+        }
     }
 
     mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
@@ -100,11 +101,14 @@ int main()
 //    mDes2.convertTo(mDes2,CV_32F);
     /**************** 图片二：提取特征点信息 ******************/
     ORBextractor *orb2 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
-    (*orb2)(second_image,cv::Mat(),mvKeys2,mDescriptors2);
+    (*orb2)(second_image,cv::Mat(),mvKeys2_all,mDescriptors2);
 
+    class_id = 0;
     for (auto &p:mvKeys2_all) {
-        if (p.octave == 0)
-            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+        if (p.octave == 0){
+//            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,class_id++));
+        }
     }
 
     mvImageShow2 = orb2->GetImagePyramid();   //获取图像金字塔
@@ -121,8 +125,15 @@ int main()
 
 
     /***************   克隆图片   ******************/
-    Mat debugOne   = feature1.clone();
-    Mat debugTwo   = feature2.clone();
+//    Mat debugOne   = feature1.clone();
+//    Mat debugTwo   = feature2.clone();
+
+//    cout << "size of key1: " << mvKeys1.size() << endl;
+//    cout << "size of key2: " << mvKeys2.size() << endl;
+//    imshow("pic1", feature1);
+//    waitKey(0);
+//    imshow("pic2", feature2);
+//    waitKey(0);
     /***************   特征匹配   *************/
 //    vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
 //    cout <<"init size:\t" << good_matches.size() << endl;
@@ -131,19 +142,19 @@ int main()
 //    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
 //    cout <<"size one:\t" << new_matches.size() << endl;
     /***************  RANSAC 实验对照组  ******************************/
-    cout << "\n采用RANSAC作为control group的实验结果：" << endl;
+    cout << "\n采用RANSAC作为control group的实验结果：";
 //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
-    cout << control_matches.size() << endl;
+//    cout << control_matches.size() << endl;
 //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
 
 //    Mat beforeOpt;   //滤除‘外点’后
 //    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
 //    imshow("init group",beforeOpt);
-//    imwrite("./figure/RANSAC.png",afterOpt);
+//    imwrite("./figure/beforeOpt.png",beforeOpt);
 //    waitKey(0);
 
-    UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,control_matches);
+    UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,mDes1,mDes2,control_matches);
 //    clock_gettime(CLOCK_REALTIME, &time2);
 //    cout << "time passed is: " << (time2.tv_sec - time1.tv_sec)*1000 + (time2.tv_nsec - time1.tv_nsec)/1000000 << "ms" << endl;
     /****************************************/
