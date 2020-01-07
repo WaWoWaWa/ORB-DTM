@@ -462,14 +462,14 @@ void UsingRansac(const int threshold_value,
                  const cv::Mat &mDes2,
                  const vector<DMatch> &control_matches)
 {
+    /***************  获取初始匹配之外的点对   **************************/
     vector<Vertex<float > > points1,points2;
     vector<cv::KeyPoint> mvKeys1_(mvKeys1), mvKeys2_(mvKeys2);
 
-//    cout << "size of mvKeys: " << mvKeys1.size() << " , " << mvKeys2.size() << endl;
-//    cout << "size of mvKeys_: " << mvKeys1_.size() << " , " << mvKeys2_.size() << endl;
+    Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
+    Mat Debug_two = feature2.clone();
 
-
-    vector<DMatch> temp_matches(control_matches);
+    vector<DMatch> temp_matches(control_matches);   // 用于排序的中间变量
 
     sort(temp_matches.begin(), temp_matches.end(), cmpQueryIdxDown);   // query ID 降序
     for (const auto &p:temp_matches)                    // 剔除初始匹配点队
@@ -478,65 +478,6 @@ void UsingRansac(const int threshold_value,
     sort(temp_matches.begin(), temp_matches.end(), cmpTrainIdxDown);   // train ID 降序
     for (const auto &p:temp_matches)                    // 剔除初始匹配点队
         mvKeys2_.erase(mvKeys2_.begin()+p.trainIdx);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-//    for (const auto &p:mvKeys1_)
-//    {
-//        cout << p.class_id << endl;
-//    }
-
-//    sort(control_matches.begin(), control_matches.end(), cmpQueryIdxUp);   //排序
-//    cout << endl;
-//    for (auto &p:control_matches)
-//    {
-//        mvKeys1_.erase(mvKeys1_.begin()+p.queryIdx-1);
-//        mvKeys2_.erase(mvKeys2_.begin()+p.trainIdx-1);
-////        cout << "index: " << p.queryIdx << "\t,\t" << p.trainIdx << "\t,\t" << p.distance << endl;
-//    }
-
-//    for (auto &p:mvKeys1_)
-//    {
-////        cout << p.class_id << endl;     // 原始的特征点
-//        for (auto &q:control_matches)
-//        {
-////            if (p.class_id == q.queryIdx)
-////                cout << "ERROR" << endl;
-//        }
-//    }
-
-//    cout << "\n\nRANSAC:" << endl;
-//    for (auto &q:control_matches)
-//    {
-////        cout << q.queryIdx << endl;
-////            if (p.class_id == q.queryIdx)
-////                cout << "ERROR" << endl;
-//    }
-
-    cout << "size of control_matches: " << control_matches.size() << endl;
-    cout << "size of mvKeys_: " << mvKeys1_.size() << " , " << mvKeys2_.size() << endl;
-
-    Mat Debug_one = feature1.clone();
-    Mat Debug_two = feature2.clone();
-
     /***************  RANSAC 实验对照组  ******************************/
     // 保存匹配对序号
     vector<int> queryIdxs( control_matches.size() ), trainIdxs( control_matches.size() );
@@ -549,9 +490,6 @@ void UsingRansac(const int threshold_value,
     vector<Point2f> CGpoints1; KeyPoint::convert(mvKeys1, CGpoints1, queryIdxs);
     vector<Point2f> CGpoints2; KeyPoint::convert(mvKeys2, CGpoints2, trainIdxs);
     int ransacReprojThreshold = 5;  //拒绝阈值 35
-
-//    cout << "Debug: " << CGpoints1.size() << endl;
-    cout << endl << endl;
 
     // 计算单应矩阵H homography matrix
     Mat homography_matrix = findHomography( Mat(CGpoints1), Mat(CGpoints2), CV_RANSAC, ransacReprojThreshold );
@@ -569,12 +507,12 @@ void UsingRansac(const int threshold_value,
             points2.emplace_back(Vertex<float>(mvKeys2[control_matches[i1].trainIdx].pt.x , mvKeys2[control_matches[i1].trainIdx].pt.y , control_matches[i1].trainIdx ));
             count++;
         }
-        else    // 保存外点
-        {
+//        else    // 保存外点   待定,但是要改进保存方法(索引不正确)
+//        {
 //            mvKeys1_.emplace_back(mvKeys1[control_matches[i1].queryIdx]);
 //            mvKeys2_.emplace_back(mvKeys2[control_matches[i1].trainIdx]);
 //            cout << "index: " << control_matches[i1].queryIdx << "\t,\t" << control_matches[i1].trainIdx << "\t,\t" << control_matches[i1].distance << endl;
-        }
+//        }
     }
     cout << "初始结果: " << count << endl;  // 显示内点数目
 
@@ -583,7 +521,6 @@ void UsingRansac(const int threshold_value,
     Mat essential_matrix = findEssentialMat(Mat(CGpoints1), Mat(CGpoints2));
     Mat mat_R,mat_t;
     recoverPose(essential_matrix, Mat(CGpoints1), Mat(CGpoints2), mat_R, mat_t);
-    //    cout << "\nessential matrix:\n" << essential_matrix << endl;
 
     Eigen::Matrix3d R;
     for (int i=0; i<mat_R.rows; ++i) {
@@ -601,18 +538,12 @@ void UsingRansac(const int threshold_value,
     //    cout << "\nt:\n" << t << endl;
 
     /*********************  使用R,t作为先验,引导特征匹配  ***************************/
-    /*
-
     // 获取尚未匹配的特征点集合     已实现:在内外点判别时,已经进行保存 mvKeys1_ mvKeys2_
-//    cout << "size of mvKey1_: " << mvKeys1_.size() << endl;
-//    cout << "size of mvKey2_: " << mvKeys2_.size() << endl;
 
     // 实现BFmatcher
     vector<DMatch> new_matches;
     for (size_t i1 = 0; i1 < mvKeys1_.size(); ++i1)     // 遍历所有未匹配的特征点mvKeys1_
     {
-//        Mat Debug_one = feature1.clone();
-//        Mat Debug_two = feature2.clone();
         Mat d1 = mDes1.row(mvKeys1_[i1].class_id);
 
         Eigen::Vector3d p1(mvKeys1_[i1].pt.x,mvKeys1_[i1].pt.y,1);
@@ -627,13 +558,9 @@ void UsingRansac(const int threshold_value,
             dx = p2(0) - mvKeys2_[i2].pt.x;
             dy = p2(1) - mvKeys2_[i2].pt.y;
             radius = dx*dx + dy*dy;         // 计算距离
-                                            // TODO: 剔除重复点对
+                                            // TO DO: 剔除重复点对 done
 
-//            Mat Debug_one = feature1.clone();
-//            Mat Debug_two = feature2.clone();
-//            circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));
-//            circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));
-
+            // 对圆形ROI内的特征点,进行进一步处理
             if (radius <= 30*30)
             {
                 Mat d2 = mDes2.row(mvKeys2_[i2].class_id);  // 提取特征点对应的描述子
@@ -659,25 +586,9 @@ void UsingRansac(const int threshold_value,
                 new_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[bestIdx2].class_id, bestDist);
             }
         }
-//        if (dist <= 30)
-//            new_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[i2].class_id, dist);
-
-
-
-//        cout << endl;
-
-//        Mat afterOpt;   //滤除‘外点’后
-//        drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
-//        imshow("Debug",afterOpt);
-//        waitKey(0);
 
     }
 
-//    Eigen::Vector3d p1(387,139,1);
-//    circle(feature1, cv::Point(p1(0),p1(1)), 10, Scalar(255,0,255));
-//    Eigen::Vector3d p2 = R*p1 + t;
-//    circle(feature2, cv::Point(p2(0),p2(1)), 10, Scalar(255,0,255));
-*/
     /****************  构建DT网络  ************************/
     ///delaunay one
 //    Delaunay<float> triangulation1;
@@ -706,10 +617,10 @@ void UsingRansac(const int threshold_value,
     imwrite("./figure/RANSAC.png",afterOpt);
     waitKey(0);
 
-//    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
-//    Mat newOpt;   //滤除‘外点’后
-//    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
-//    imshow("newOpt",newOpt);
-//    imwrite("./figure/add.png",newOpt);
-//    waitKey(0);
+    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
+    Mat newOpt;   //滤除‘外点’后
+    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
+    imshow("newOpt",newOpt);
+    imwrite("./figure/add.png",newOpt);
+    waitKey(0);
 }

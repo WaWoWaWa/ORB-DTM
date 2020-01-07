@@ -45,11 +45,11 @@ int main()
 //    string file1 = "./data/draw1.png";      // 2500 28  15
 //    string file2 = "./data/draw2.png";
     /**************** 配置信息 ******************/
-    int nFeatures =800;        // 特征点数量
+    int nFeatures =1500;        // 特征点数量 800
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
     int nLevels =8;             // 金字塔层数
     int fIniThFAST =18;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
-    int fMinThFAST =10;
+    int fMinThFAST =12;          // 此阈值越高,角点质量越好
 
     int level = 0;      // 特定层数得到的源图像
 
@@ -64,27 +64,26 @@ int main()
     vector<int> mnFeaturesPerLevel1;     //金字塔每层的特征点数量
     vector<vector<cv::KeyPoint>> mvvKeypoints1;  //每层的特征点
     cv::Mat mDes1;
-//    mDes1.convertTo(mDes1,CV_32F);
+    //    mDes1.convertTo(mDes1,CV_32F);
     /**************** 图片一：提取特征点信息 ******************/
     auto *orb1 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb1)(first_image,cv::Mat(),mvKeys1_all,mDescriptors1);
 
+    mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
+    mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
+
     int class_id = 0;
     for (auto &p:mvKeys1_all) {
-        if (p.octave == 0) {
-//            mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
+        if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
+    //            mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
             mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, class_id++));
         }
     }
 
-    mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
-    mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
-
-//    mvvKeypoints1 = orb1->GetmvvKeypoints();
-//    mvKeys1 = mvvKeypoints1[level];
+    //    mvvKeypoints1 = orb1->GetmvvKeypoints();
+    //    mvKeys1 = mvvKeypoints1[level];
     mDes1 = mDescriptors1.rowRange(0,mnFeaturesPerLevel1[level]).clone();
 
-//    cout <<"\t\tKeyPoints:"<<mnFeaturesPerLevel1[level]<<endl;
     cv::drawKeypoints(mvImageShow1[level], mvKeys1, feature1, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
 
@@ -98,65 +97,63 @@ int main()
     vector<int> mnFeaturesPerLevel2;     //金字塔每层的特征点数量
     vector<vector<cv::KeyPoint>> mvvKeypoints2;  //每层的特征点
     cv::Mat mDes2;
-//    mDes2.convertTo(mDes2,CV_32F);
+    //    mDes2.convertTo(mDes2,CV_32F);
     /**************** 图片二：提取特征点信息 ******************/
     ORBextractor *orb2 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb2)(second_image,cv::Mat(),mvKeys2_all,mDescriptors2);
 
-    class_id = 0;
-    for (auto &p:mvKeys2_all) {
-        if (p.octave == 0){
-//            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
-            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,class_id++));
-        }
-    }
+
+
 
     mvImageShow2 = orb2->GetImagePyramid();   //获取图像金字塔
 
     mnFeaturesPerLevel2 = orb2->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
+    cout << "2 level: " << mnFeaturesPerLevel2[0] << endl;
 
-//    mvvKeypoints2 = orb2->GetmvvKeypoints();
-//    mvKeys2 = mvvKeypoints2[level];
+    class_id = 0;
+    for (auto &p:mvKeys2_all) {
+        if (p.octave == level && class_id < mnFeaturesPerLevel2[level]){
+    //            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,class_id++));
+        }
+    }
+    cout << "size of K2: " << mvKeys2.size() << " , " << class_id << endl;
+
+    //    mvvKeypoints2 = orb2->GetmvvKeypoints();
+    //    mvKeys2 = mvvKeypoints2[level];
     mDes2 = mDescriptors2.rowRange(0,mnFeaturesPerLevel2[level]).clone();
 
-//    cout <<"\t\tKeyPoints:"<<mnFeaturesPerLevel2[level]<<endl;
     cv::drawKeypoints(mvImageShow2[level], mvKeys2, feature2, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
 
 
     /***************   克隆图片   ******************/
-//    Mat debugOne   = feature1.clone();
-//    Mat debugTwo   = feature2.clone();
+    //    Mat debugOne   = feature1.clone();
+    //    Mat debugTwo   = feature2.clone();
 
-//    cout << "size of key1: " << mvKeys1.size() << endl;
-//    cout << "size of key2: " << mvKeys2.size() << endl;
-//    imshow("pic1", feature1);
-//    waitKey(0);
-//    imshow("pic2", feature2);
-//    waitKey(0);
+    //    cout << "size of key1: " << mvKeys1.size() << endl;
+    //    cout << "size of key2: " << mvKeys2.size() << endl;
+    //    imshow("pic1", feature1);
+    //    waitKey(0);
+    //    imshow("pic2", feature2);
+    //    waitKey(0);
     /***************   特征匹配   *************/
-//    vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
-//    cout <<"init size:\t" << good_matches.size() << endl;
-//    vector<DMatch> good_matches( KNNmatchFunc(mDes1, mDes2) );
+    //    vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
+    //    cout <<"init size:\t" << good_matches.size() << endl;
+    //    vector<DMatch> good_matches( KNNmatchFunc(mDes1, mDes2) );
     /***************  构建DT网络  ******************************/
-//    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
-//    cout <<"size one:\t" << new_matches.size() << endl;
+    //    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
+    //    cout <<"size one:\t" << new_matches.size() << endl;
     /***************  RANSAC 实验对照组  ******************************/
     cout << "\n采用RANSAC作为control group的实验结果：";
-//    clock_gettime(CLOCK_REALTIME, &time1);
+    //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
-//    cout << control_matches.size() << endl;
-//    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
+    //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
 
-//    Mat beforeOpt;   //滤除‘外点’后
-//    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,beforeOpt,Scalar(0,0,255));
-//    imshow("init group",beforeOpt);
-//    imwrite("./figure/beforeOpt.png",beforeOpt);
-//    waitKey(0);
 
     UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,mDes1,mDes2,control_matches);
-//    clock_gettime(CLOCK_REALTIME, &time2);
-//    cout << "time passed is: " << (time2.tv_sec - time1.tv_sec)*1000 + (time2.tv_nsec - time1.tv_nsec)/1000000 << "ms" << endl;
+    //    clock_gettime(CLOCK_REALTIME, &time2);
+    //    cout << "time passed is: " << (time2.tv_sec - time1.tv_sec)*1000 + (time2.tv_nsec - time1.tv_nsec)/1000000 << "ms" << endl;
     /****************************************/
     cout << "\nmain end, see you...";
     return 0;
