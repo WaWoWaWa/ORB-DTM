@@ -9,6 +9,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/aruco.hpp>
 
 #include "include/ORBextractor.h"
 #include "include/Vertex.h"
@@ -35,21 +36,29 @@ using namespace ORB_SLAM2;
 /// 主函数
 int main()
 {
+//    cv::Mat markerImage;
+//    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
+//    cv::aruco::drawMarker(dictionary, 23, 200, markerImage, 1);
+
 //    struct timespec time1 = {0, 0};       // 用于计时
 //    struct timespec time2 = {0, 0};
 
-//    string file1 = "./data/desk1.png";    // 1500 18  12
-//    string file2 = "./data/desk2.png";
+    string file1 = "./data/desk1.png";    // 1500 18  12
+    string file2 = "./data/desk2.png";
 //    string file1 = "./data/flag1.png";      // 1000 28  15  18 12
 //    string file2 = "./data/flag2.png";
-    string file1 = "./data/draw1.png";      // 2500 28  15
-    string file2 = "./data/draw2.png";
+//    string file1 = "./data/draw1.png";      // 2500 28  15
+//    string file2 = "./data/draw2.png";
+//    string file1 = "./data/graf/img4.ppm";      // 2500 28  15
+//    string file2 = "./data/graf/img5.ppm";
+//    string file1 = "./data/newspaper1.jpg";      // 2500 28  15
+//    string file2 = "./data/newspaper2.jpg";
     /**************** 配置信息 ******************/
-    int nFeatures =2500;        // 特征点数量 800
+    int nFeatures =2000;        // 特征点数量 800
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
     int nLevels =8;             // 金字塔层数
-    int fIniThFAST =28;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
-    int fMinThFAST =15;          // 此阈值越高,角点质量越好
+    int fIniThFAST =150;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
+    int fMinThFAST =50;          // 此阈值越高,角点质量越好;选取范围0-255
 
     int level = 0;      // 特定层数得到的源图像
 
@@ -72,12 +81,17 @@ int main()
     mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
     mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
 
+
+    vector<cv::KeyPoint> mvKeys11;
     int class_id = 0;
     for (auto &p:mvKeys1_all) {
         if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
     //            mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
             mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, class_id++));
         }
+
+        if (p.octave == 1)
+            mvKeys11.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
     }
 
     //    mvvKeypoints1 = orb1->GetmvvKeypoints();
@@ -86,6 +100,19 @@ int main()
 
     cv::drawKeypoints(mvImageShow1[level], mvKeys1, feature1, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
+
+    imshow("level0", feature1);
+    imwrite("./figure/level0.png",feature1);
+    waitKey(0);
+
+    Mat feature11 = mvImageShow1[1].clone();
+    cv::drawKeypoints(mvImageShow1[1], mvKeys11, feature11, cv::Scalar::all(-1),
+                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
+
+    imshow("level1", feature11);
+    imwrite("./figure/level1.png",feature11);
+    waitKey(0);
+    // todo : 使用高斯金字塔的尺度不变性,解决圆形ROI内汉明距离存在多个值相同的问题
 
     /**************** 图片二：初始化信息 *********************/
     cv::Mat second_image = cv::imread(file2, 0);    // load grayscale image 灰度图
@@ -144,7 +171,6 @@ int main()
     //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
     //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
-
 
     UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,mDes1,mDes2,control_matches);
     //    clock_gettime(CLOCK_REALTIME, &time2);

@@ -93,7 +93,7 @@ vector<DMatch> ComputeDTMunit(int threshold, const vector<DMatch> &initGood_matc
 //    imwrite("./figure/beforeDTM.png",beforeOpt);
 //    waitKey(0);
 
-    return initGood_matches;
+//    return initGood_matches;
 /*******************  构建边矩阵，并计算相似度(范数)，进行DT网络的优化  *********************/
 //    cout << "\n计算DTM的相关信息：" << endl;
 //    Eigen::MatrixXd::Index maxRow,maxCol;
@@ -245,7 +245,7 @@ void UpdateKey(const vector<DMatch> &good_matches, const vector<cv::KeyPoint> &m
     //   注意：由于删除的是列，而转换成vector后操作的是行，因此可以对Mat进行转置后，再进行转换操作，即Mat.t()
     //   在循环外边完成Mat到vector的转换工作，进行循环操作并退出后，再进行转换回来
     vector<int> order1,order2;
-//    cout << "Size of goodmatchs:  " << good_matches.size() << endl;
+    //    cout << "Size of goodmatchs:  " << good_matches.size() << endl;
     // 更新特征点
     for(const auto &g:good_matches)
     {
@@ -281,10 +281,10 @@ void UpdateKey(const vector<DMatch> &good_matches, const vector<cv::KeyPoint> &m
         }
 
     }
-//    cout << "Sizes of mvKeys1_new: \t" << mvKeys1_new.size() << endl;
-//    cout << "Sizes of mDes1_new:\t\t" << mDes1_new.size << endl;
-//    cout << "Sizes of mvKeys2_new: \t" << mvKeys2_new.size() << endl;
-//    cout << "Sizes of mDes2_new:\t\t" << mDes2_new.size << endl;
+    //    cout << "Sizes of mvKeys1_new: \t" << mvKeys1_new.size() << endl;
+    //    cout << "Sizes of mDes1_new:\t\t" << mDes1_new.size << endl;
+    //    cout << "Sizes of mvKeys2_new: \t" << mvKeys2_new.size() << endl;
+    //    cout << "Sizes of mDes2_new:\t\t" << mDes2_new.size << endl;
 
 }
 
@@ -334,7 +334,7 @@ inline bool cmpTrainIdxEqual(const DMatch first,const DMatch second)
  */
 vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int threshold)
 {
-//    cout << "\n显示第一次特征匹配的基本信息：" << endl;
+    //    cout << "\n显示第一次特征匹配的基本信息：" << endl;
     vector<DMatch> matches,good_matches;
     BFMatcher matcher(NORM_HAMMING);
     matcher.match(mDes1,mDes2,matches);
@@ -351,8 +351,8 @@ vector<DMatch> BFmatchFunc(const cv::Mat &mDes1, const cv::Mat &mDes2, int thres
             max_dist = dist;
     }
 
-//    cout << "\tmin_dist:" << min_dist << endl;
-//    cout << "\tmax_dist:" << max_dist << endl;
+    //    cout << "\tmin_dist:" << min_dist << endl;
+    //    cout << "\tmax_dist:" << max_dist << endl;
 
     //筛选匹配
     int temp=0;
@@ -399,12 +399,11 @@ vector<DMatch> KNNmatchFunc(cv::Mat &mDes1, cv::Mat &mDes2)
     vector<vector<DMatch> > knnmatches;
     vector<DMatch> good_matches;
 
-//    const Ptr<flann::IndexParams>& indexParams=new flann::KDTreeIndexParams();
-//    const Ptr<flann::SearchParams>& searchParams=new flann::SearchParams() ;
-//    const Ptr<flann::IndexParams>& indexParams = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1);
+    //    const Ptr<flann::IndexParams>& indexParams=new flann::KDTreeIndexParams();
+    //    const Ptr<flann::SearchParams>& searchParams=new flann::SearchParams() ;
+    //    const Ptr<flann::IndexParams>& indexParams = dict(algorithm=FLANN_INDEX_LSH, table_number=6, key_size=12, multi_probe_level=1);
 
     FlannBasedMatcher matcher;
-//    matcher
     matcher.knnMatch(mDes1, mDes2, knnmatches, k);
 
     for (std::size_t i = 0; i < knnmatches.size(); ++i)
@@ -493,6 +492,19 @@ void UsingRansac(const int threshold_value,
 
     // 计算单应矩阵H homography matrix
     Mat homography_matrix = findHomography( Mat(CGpoints1), Mat(CGpoints2), CV_RANSAC, ransacReprojThreshold );
+    //    cout << "\nhomography_matrix: \n" << homography_matrix << endl;
+    Eigen::Matrix3d H12;
+    H12 <<  homography_matrix.at<double>(0,0), homography_matrix.at<double>(0,1), homography_matrix.at<double>(0,2),
+            homography_matrix.at<double>(1,0), homography_matrix.at<double>(1,1), homography_matrix.at<double>(1,2),
+            homography_matrix.at<double>(2,0), homography_matrix.at<double>(2,1), homography_matrix.at<double>(2,2);
+
+    Mat homography2_matrix = findHomography( Mat(CGpoints1), Mat(CGpoints2), CV_RANSAC, ransacReprojThreshold );
+    //    cout << "\nhomography2_matrix: \n" << homography2_matrix << endl;
+    Eigen::Matrix3d H21;
+    H21 <<  homography2_matrix.at<double>(0,0), homography2_matrix.at<double>(0,1), homography2_matrix.at<double>(0,2),
+            homography2_matrix.at<double>(1,0), homography2_matrix.at<double>(1,1), homography2_matrix.at<double>(1,2),
+            homography2_matrix.at<double>(2,0), homography2_matrix.at<double>(2,1), homography2_matrix.at<double>(2,2);
+
     vector<char> matchesMask( control_matches.size(), 0 );
     Mat points1t;
     perspectiveTransform(Mat(CGpoints1), points1t, homography_matrix);  // 透视变换处理
@@ -507,12 +519,12 @@ void UsingRansac(const int threshold_value,
             points2.emplace_back(Vertex<float>(mvKeys2[control_matches[i1].trainIdx].pt.x , mvKeys2[control_matches[i1].trainIdx].pt.y , control_matches[i1].trainIdx ));
             count++;
         }
-//        else    // 保存外点   待定,但是要改进保存方法(索引不正确)
-//        {
-//            mvKeys1_.emplace_back(mvKeys1[control_matches[i1].queryIdx]);
-//            mvKeys2_.emplace_back(mvKeys2[control_matches[i1].trainIdx]);
-//            cout << "index: " << control_matches[i1].queryIdx << "\t,\t" << control_matches[i1].trainIdx << "\t,\t" << control_matches[i1].distance << endl;
-//        }
+        //        else    // 保存外点   待定,但是要改进保存方法(索引不正确)
+        //        {
+        //            mvKeys1_.emplace_back(mvKeys1[control_matches[i1].queryIdx]);
+        //            mvKeys2_.emplace_back(mvKeys2[control_matches[i1].trainIdx]);
+        //            cout << "index: " << control_matches[i1].queryIdx << "\t,\t" << control_matches[i1].trainIdx << "\t,\t" << control_matches[i1].distance << endl;
+        //        }
     }
     cout << "\n初始结果: " << count << endl;  // 显示内点数目
 
@@ -547,9 +559,11 @@ void UsingRansac(const int threshold_value,
         Mat d1 = mDes1.row(mvKeys1_[i1].class_id);
 
         Eigen::Vector3d p1(mvKeys1_[i1].pt.x,mvKeys1_[i1].pt.y,1);
-//        circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));
-        Eigen::Vector3d p2 = R*p1 + t;
-//        circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));
+        // circle(Debug_one, cv::Point(p1(0),p1(1)), 30, Scalar(255,0,255));     // 可视化
+        // Eigen::Vector3d p2 = R*p1 + t;        // 使用基础矩阵E计算坐标
+        // circle(Debug_two, cv::Point(p2(0),p2(1)), 30, Scalar(255,0,255));     // 可视化
+        Eigen::Vector3d p2 = H12 * p1;          // 使用单应矩阵H计算坐标
+        // 是否应该采取两种矩阵均计算的方式,选取误差更小的结果???
 
         float radius(0), dx, dy;
         int bestDist = INT_MAX, bestDist2 = INT_MAX, bestIdx2 = -1;
@@ -564,12 +578,11 @@ void UsingRansac(const int threshold_value,
             // 对圆形ROI内的特征点,进行进一步处理
             if (radius <= ROIradius*ROIradius)
             {
-//                Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
-//                Mat Debug_two = feature2.clone();
-//                circle(Debug_one, cv::Point(p1(0),p1(1)), ROIradius, Scalar(255,0,255));
-//                circle(Debug_two, cv::Point(p2(0),p2(1)), ROIradius, Scalar(255,0,255));
-
-
+                // Debug: 此处用于每帧图像均进行单独的可视化操作
+                // Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
+                // Mat Debug_two = feature2.clone();
+                // circle(Debug_one, cv::Point(p1(0),p1(1)), ROIradius, Scalar(255,0,255));
+                // circle(Debug_two, cv::Point(p2(0),p2(1)), ROIradius, Scalar(255,0,255));
 
                 Mat d2 = mDes2.row(mvKeys2_[i2].class_id);  // 提取特征点对应的描述子
                 int dist = DescriptorDistance(d1,d2);       // 计算两个描述子之间的汉明距离
@@ -593,14 +606,30 @@ void UsingRansac(const int threshold_value,
             }
         }
 
-        if (bestDist <= 70)     // 75
+        if (bestDist <= 90)     /// 75
         {
             if (bestDist < (float)bestDist2*1.0)    // 不应该再使用比值来限制,因为已经限制在很小的ROI之中,比较个数很少
             {
                 new_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[bestIdx2].class_id, bestDist);
 
-//                points1.emplace_back(Vertex<float>(mvKeys1[mvKeys1_[i1].class_id].pt.x , mvKeys1[mvKeys1_[i1].class_id].pt.y , mvKeys1_[i1].class_id ));
-//                points2.emplace_back(Vertex<float>(mvKeys2[mvKeys2_[bestIdx2].class_id].pt.x , mvKeys2[mvKeys2_[bestIdx2].class_id].pt.y , mvKeys2_[bestIdx2].class_id ));
+                // Debug: 中间环节的可视化
+//                vector<DMatch> temp_matches;
+//                temp_matches.emplace_back(mvKeys1_[i1].class_id, mvKeys2_[bestIdx2].class_id, bestDist);
+//                Mat Debug_one = feature1.clone();       // 克隆,用于增加额外的匹配点对(借助相机外参)
+//                Mat Debug_two = feature2.clone();
+//                Mat tempOpt;   //滤除‘外点’后
+//                drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,temp_matches,tempOpt,Scalar(0,255,0));
+//                imshow("tempOpt",tempOpt);
+//                waitKey(0);
+
+                // 用于构建Delaunay Triangulation网络
+                points1.emplace_back(Vertex<float>(mvKeys1[mvKeys1_[i1].class_id].pt.x ,
+                                                   mvKeys1[mvKeys1_[i1].class_id].pt.y ,
+                                                   mvKeys1_[i1].class_id ));
+
+                points2.emplace_back(Vertex<float>(mvKeys2[mvKeys2_[bestIdx2].class_id].pt.x ,
+                                                   mvKeys2[mvKeys2_[bestIdx2].class_id].pt.y ,
+                                                   mvKeys2_[bestIdx2].class_id ));
             }
         }
 
@@ -635,7 +664,6 @@ void UsingRansac(const int threshold_value,
 
     cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
     Mat newOpt;   //滤除‘外点’后
-//    drawMatches(feature1,mvKeys1,feature2,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
     drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
     imshow("newOpt",newOpt);
     imwrite("./figure/add.png",newOpt);
