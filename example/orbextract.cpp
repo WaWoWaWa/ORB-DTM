@@ -145,14 +145,7 @@ int main()
 //    imshow("Mat1", feature1);
 //    waitKey(0);
 
-
-//    Mat temp;
-//    cv::drawKeypoints(mvImageShow1[1], mvKeys11, temp, cv::Scalar::all(-1),
-//                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
-//    imshow("Mat11", temp);
-//    waitKey(0);
-
-    /// 显示每一层的Mat,并绘制特征点
+    /// 显示每一层的Mat,并显示特征点
     for (int i = 0; i < 8; i++)
     {
         string name = "Mat" + std::to_string(i);
