@@ -9,7 +9,7 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/features2d.hpp>
 #include <opencv2/highgui.hpp>
-#include <opencv2/aruco.hpp>
+//#include <opencv2/aruco.hpp>
 
 #include "include/ORBextractor.h"
 #include "include/Vertex.h"
@@ -57,10 +57,11 @@ int main()
     int nFeatures =2000;        // 特征点数量 800
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
     int nLevels =8;             // 金字塔层数
-    int fIniThFAST =150;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
-    int fMinThFAST =50;          // 此阈值越高,角点质量越好;选取范围0-255
+    int fIniThFAST =18;          // 提取FAST角点的阈值  两个阈值进行选择 18  8
+    int fMinThFAST =8;         // 此阈值越高,角点质量越好;选取范围0-255
+                                // 初始匹配应更严格,阈值应更高
 
-    int level = 0;      // 特定层数得到的源图像
+    int level = 1;      // 特定层数得到的源图像
 
     cout << "显示特征提取的基本信息：" << endl;
     /**************** 图片一：初始化信息 *********************/
@@ -81,17 +82,17 @@ int main()
     mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
     mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
 
-
     vector<cv::KeyPoint> mvKeys11;
     int class_id = 0;
     for (auto &p:mvKeys1_all) {
+        /// 取出level0的关键点,存在mvKeys1中; 并且进行重新编号
         if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
-    //            mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
+            // mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
             mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, class_id++));
         }
 
-        if (p.octave == 1)
-            mvKeys11.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
+//        if (p.octave == 1)
+//            mvKeys11.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
     }
 
     //    mvvKeypoints1 = orb1->GetmvvKeypoints();
@@ -100,20 +101,40 @@ int main()
 
     cv::drawKeypoints(mvImageShow1[level], mvKeys1, feature1, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
-
-    imshow("level0", feature1);
-    imwrite("./figure/level0.png",feature1);
+    imshow("Mat1", feature1);
     waitKey(0);
 
-    Mat feature11 = mvImageShow1[1].clone();
-    cv::drawKeypoints(mvImageShow1[1], mvKeys11, feature11, cv::Scalar::all(-1),
-                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
 
-    imshow("level1", feature11);
-    imwrite("./figure/level1.png",feature11);
-    waitKey(0);
-    // todo : 使用高斯金字塔的尺度不变性,解决圆形ROI内汉明距离存在多个值相同的问题
+//    Mat temp;
+//    cv::drawKeypoints(mvImageShow1[1], mvKeys11, temp, cv::Scalar::all(-1),
+//                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
+//    imshow("Mat11", temp);
+//    waitKey(0);
 
+//    for (int i = 0; i < 8; i++)
+//    {
+//        string name = "Mat" + std::to_string(i);
+//        Mat temp = mvImageShow1[i].clone();
+//        imshow(name, temp);
+//        waitKey(0);
+//    }
+
+//    Mat feature11 = mvImageShow1[1].clone();
+//    cv::drawKeypoints(mvImageShow1[1], mvKeys11, feature11, cv::Scalar::all(-1),
+//                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
+//
+//    imshow("level1", feature11);
+//    imwrite("./figure/level1.png",feature11);
+//    waitKey(0);
+//    // todo : 使用高斯金字塔的尺度不变性,解决圆形ROI内汉明距离存在多个值相同的问题
+//
+//    Mat feature12 = mvImageShow1[2].clone();
+//    cv::drawKeypoints(mvImageShow1[2], mvKeys11, feature12, cv::Scalar::all(-1),
+//                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
+//
+//    imshow("level2", feature12);
+//    imwrite("./figure/level2.png",feature12);
+//    waitKey(0);
     /**************** 图片二：初始化信息 *********************/
     cv::Mat second_image = cv::imread(file2, 0);    // load grayscale image 灰度图
     cv::Mat feature2;
@@ -148,7 +169,8 @@ int main()
     cv::drawKeypoints(mvImageShow2[level], mvKeys2, feature2, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
 
-
+//    imshow("Mat2", feature2);
+//    waitKey(0);
     /***************   克隆图片   ******************/
     //    Mat debugOne   = feature1.clone();
     //    Mat debugTwo   = feature2.clone();
