@@ -599,8 +599,10 @@ namespace ORB_SLAM2
      * @param level
      * @return vResultKeys
      */
-    vector<cv::KeyPoint> ORBextractor::DistributeOctTree(const vector<cv::KeyPoint>& vToDistributeKeys, const int &minX,
-                                                         const int &maxX, const int &minY, const int &maxY, const int &N, const int &level)
+    vector<cv::KeyPoint> ORBextractor::DistributeOctTree(const vector<cv::KeyPoint>& vToDistributeKeys,
+                                                         const int &minX, const int &maxX,
+                                                         const int &minY, const int &maxY,
+                                                         const int &N, const int &level)
     {
         /// 步骤1：计算根节点的相关信息
         // Compute how many initial nodes
@@ -860,7 +862,7 @@ namespace ORB_SLAM2
     void ORBextractor::ComputeKeyPointsOctTree(vector<vector<KeyPoint> >& allKeypoints)
     {
         allKeypoints.resize(nlevels);   //这是容器中的resize,与图像的不同
-        mvvKeypoints.resize(nlevels);   // me ???
+//        mvvKeypoints.resize(nlevels);   // me ???
 
         const float W = 30;     //对每一层图像划分30*30的栅格
 
@@ -955,7 +957,7 @@ namespace ORB_SLAM2
                 keypoints[i].size = scaledPatchSize;
             }
 
-            mvvKeypoints[level] = keypoints;
+//            mvvKeypoints[level] = keypoints;
         }
 
         // compute orientations     计算所有层所有特征点的旋转主方向
@@ -1179,6 +1181,7 @@ namespace ORB_SLAM2
         /*******************  提取关键点  **************************/
         // 计算每层图像的兴趣点
         // 计算关键点并生成四叉树
+//        mvvKeypoints.clear();
         vector < vector<KeyPoint> > allKeypoints;
         ComputeKeyPointsOctTree(allKeypoints);      //
         //ComputeKeyPointsOld(allKeypoints);
@@ -1197,6 +1200,8 @@ namespace ORB_SLAM2
             descriptors = _descriptors.getMat();
         }
 
+//        mvvKeypoints.clear();
+//        mvvKeypoints.resize(nlevels);
         _keypoints.clear();
         _keypoints.reserve(nkeypoints);
         // 计算每个关键点对应的描述子
@@ -1231,6 +1236,12 @@ namespace ORB_SLAM2
             }
             // And add the keypoints to the output
             _keypoints.insert(_keypoints.end(), keypoints.begin(), keypoints.end());
+//            mvvKeypoints[level].insert(keypoints);
+//            mvvKeypoints[level].emplace_back(keypoints);
+        }
+
+        for (int i = 0; i < 8; ++i) {
+            cout << "size: " << allKeypoints[i].size() << " , " << mnFeaturesPerLevel[i] << endl;
         }
     }
 

@@ -45,6 +45,8 @@ int main()
 
     string file1 = "./data/desk1.png";    // 1500 18  12
     string file2 = "./data/desk2.png";
+//    string file1 = "./data/n1.png";    // 1500 18  12
+//    string file2 = "./data/n2.png";
 //    string file1 = "./data/flag1.png";      // 1000 28  15  18 12
 //    string file2 = "./data/flag2.png";
 //    string file1 = "./data/draw1.png";      // 2500 28  15
@@ -57,13 +59,16 @@ int main()
     int nFeatures =2000;        // 特征点数量 800
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
     int nLevels =8;             // 金字塔层数
-    int fIniThFAST =18;          // 提取FAST角点的阈值  两个阈值进行选择 18  8
-    int fMinThFAST =8;         // 此阈值越高,角点质量越好;选取范围0-255
-                                // 初始匹配应更严格,阈值应更高
+    int fIniThFAST =18;         // 提取FAST角点的阈值  两个阈值进行选择 18  8
+    int fMinThFAST =8;          // 此阈值越高,角点质量越好;选取范围0-255
+    // 初始匹配应更严格,阈值应更高
 
-    int level = 1;      // 特定层数得到的源图像
+    int level = 0;      // 特定层数得到的源图像
 
     cout << "显示特征提取的基本信息：" << endl;
+
+    vector< vector<cv::KeyPoint> > mvvKeys1;
+    mvvKeys1.resize(8);
     /**************** 图片一：初始化信息 *********************/
     cv::Mat first_image = cv::imread(file1, 0);    // load grayscale image 灰度图
     cv::Mat feature1;
@@ -79,30 +84,66 @@ int main()
     auto *orb1 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb1)(first_image,cv::Mat(),mvKeys1_all,mDescriptors1);
 
+//    cout << "key: " << mvKeys1_all.size() << " ,mSesc: " << mDescriptors1.size << endl;
+
     mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
     mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
 
-    vector<cv::KeyPoint> mvKeys11;
+//    cout << "显示每层金字塔的特征点数目" << endl;
+//    int count = 0, sum = 0;
+//    for (auto &p:mnFeaturesPerLevel1)
+//    {
+//        cout << count++ << " : " << p << endl;
+//        sum += p;
+//    }
+//    cout << "sum = " << sum << endl;
+
+//    vector<cv::KeyPoint> mvKeys11;
     int class_id = 0;
+    vector<int> init_id{0,0,0,0,0,0,0,0};
     for (auto &p:mvKeys1_all) {
         /// 取出level0的关键点,存在mvKeys1中; 并且进行重新编号
-        if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
+//        if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
+        if (p.octave == 0) {
             // mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
             mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, class_id++));
+            mvvKeys1[0].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[0]++));
         }
+        else if (p.octave == 1)
+            mvvKeys1[1].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[1]++));
+        else if (p.octave == 2)
+            mvvKeys1[2].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[2]++));
+        else if (p.octave == 3)
+            mvvKeys1[3].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[3]++));
+        else if (p.octave == 4)
+            mvvKeys1[4].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[4]++));
+        else if (p.octave == 5)
+            mvvKeys1[5].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[5]++));
+        else if (p.octave == 6)
+            mvvKeys1[6].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[6]++));
+        else if (p.octave == 7)
+            mvvKeys1[7].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[7]++));
 
 //        if (p.octave == 1)
 //            mvKeys11.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
     }
 
-    //    mvvKeypoints1 = orb1->GetmvvKeypoints();
-    //    mvKeys1 = mvvKeypoints1[level];
+
+    mvvKeypoints1 = orb1->GetmvvKeypoints();
+
+    cout << "显示mvvKeypoints 的信息: " << endl;
+    for(auto &p:mvvKeypoints1)
+    {
+        cout << p.size() << endl;
+    }
+//    mvKeys1 = mvvKeypoints1[level];
+
     mDes1 = mDescriptors1.rowRange(0,mnFeaturesPerLevel1[level]).clone();
 
     cv::drawKeypoints(mvImageShow1[level], mvKeys1, feature1, cv::Scalar::all(-1),
                       cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
-    imshow("Mat1", feature1);
-    waitKey(0);
+//    imshow("Mat1", feature1);
+//    waitKey(0);
 
 
 //    Mat temp;
@@ -111,13 +152,16 @@ int main()
 //    imshow("Mat11", temp);
 //    waitKey(0);
 
-//    for (int i = 0; i < 8; i++)
-//    {
-//        string name = "Mat" + std::to_string(i);
-//        Mat temp = mvImageShow1[i].clone();
-//        imshow(name, temp);
-//        waitKey(0);
-//    }
+    /// 显示每一层的Mat,并绘制特征点
+    for (int i = 0; i < 8; i++)
+    {
+        string name = "Mat" + std::to_string(i);
+        Mat temp;
+        cv::drawKeypoints(mvImageShow1[i], mvvKeys1[i], temp, cv::Scalar::all(-1),
+                          cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
+        imshow(name, temp);
+        waitKey(0);
+    }
 
 //    Mat feature11 = mvImageShow1[1].clone();
 //    cv::drawKeypoints(mvImageShow1[1], mvKeys11, feature11, cv::Scalar::all(-1),
@@ -157,7 +201,7 @@ int main()
     class_id = 0;
     for (auto &p:mvKeys2_all) {
         if (p.octave == level && class_id < mnFeaturesPerLevel2[level]){
-    //            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
+            //            mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,p.class_id));
             mvKeys2.emplace_back(cv::KeyPoint(p.pt,p.size,p.angle,p.response,p.octave,class_id++));
         }
     }
