@@ -43,8 +43,8 @@ int main()
 //    struct timespec time1 = {0, 0};       // 用于计时
 //    struct timespec time2 = {0, 0};
 
-    string file1 = "./data/desk1.png";    // 1500 18  12
-    string file2 = "./data/desk2.png";
+//    string file1 = "./data/desk1.png";    // 1500 18  12
+//    string file2 = "./data/desk2.png";
 //    string file1 = "./data/n1.png";    // 1500 18  12
 //    string file2 = "./data/n2.png";
 //    string file1 = "./data/flag1.png";      // 1000 28  15  18 12
@@ -55,6 +55,16 @@ int main()
 //    string file2 = "./data/graf/img5.ppm";
 //    string file1 = "./data/newspaper1.jpg";      // 2500 28  15
 //    string file2 = "./data/newspaper2.jpg";
+//    string file1 = "./data/barks/img3.ppm";      // 2500 28  15
+//    string file2 = "./data/barks/img4.ppm";
+
+    string file1 = "./data/tum/1305031127.411371.png";    // 1500 18  12
+    string file2 = "./data/tum/1305031127.447333.png";
+
+//    string depth_name = "./data/tum/1305031127.419650.png";
+//    cv::Mat depth_image = cv::imread(depth_name, 0);
+//    cout << "类型: " << depth_image.type() << endl;
+//    cout << "\n深度值: " << depth_image.at<int>(cv::Point(73, 323)) << endl;    // float 7.05334e-30
     /**************** 配置信息 ******************/
     int nFeatures =2000;        // 特征点数量 800
     float fScaleFactor =1.2;    // 图像金字塔的缩放尺度
@@ -67,8 +77,8 @@ int main()
 
     cout << "显示特征提取的基本信息：" << endl;
 
-    vector< vector<cv::KeyPoint> > mvvKeys1;
-    mvvKeys1.resize(8);
+//    vector< vector<cv::KeyPoint> > mvvKeys1;
+//    mvvKeys1.resize(8);
     /**************** 图片一：初始化信息 *********************/
     cv::Mat first_image = cv::imread(file1, 0);    // load grayscale image 灰度图
     cv::Mat feature1;
@@ -77,14 +87,17 @@ int main()
     vector<cv::KeyPoint> mvKeys1;        //一维特征点 最底层的特征点
     cv::Mat mDescriptors1;               //描述子
     vector<int> mnFeaturesPerLevel1;     //金字塔每层的特征点数量
-    vector<vector<cv::KeyPoint>> mvvKeypoints1;  //每层的特征点
+//    vector<vector<cv::KeyPoint>> mvvKeypoints1;  //每层的特征点
     cv::Mat mDes1;
     //    mDes1.convertTo(mDes1,CV_32F);
+
+//    arrowedLine(first_image, cv::Point(100, 100), cv::Point(100, 100 - 30), Scalar(0, 0, 255), 1, 8);
+//    arrowedLine(first_image, cv::Point(105, 100), cv::Point(105, 100 - 30), Scalar(0, 0, 255), 1, 8);
+//    imshow("test",first_image);
+//    waitKey(0);
     /**************** 图片一：提取特征点信息 ******************/
     auto *orb1 = new ORBextractor(nFeatures,fScaleFactor,nLevels,fIniThFAST,fMinThFAST);
     (*orb1)(first_image,cv::Mat(),mvKeys1_all,mDescriptors1);
-
-//    cout << "key: " << mvKeys1_all.size() << " ,mSesc: " << mDescriptors1.size << endl;
 
     mvImageShow1 = orb1->GetImagePyramid();   //获取图像金字塔
     mnFeaturesPerLevel1 = orb1->GetmnFeaturesPerLevel();  //获取每层金字塔的特征点数量
@@ -98,45 +111,22 @@ int main()
 //    }
 //    cout << "sum = " << sum << endl;
 
-//    vector<cv::KeyPoint> mvKeys11;
     int class_id = 0;
-    vector<int> init_id{0,0,0,0,0,0,0,0};
     for (auto &p:mvKeys1_all) {
         /// 取出level0的关键点,存在mvKeys1中; 并且进行重新编号
-//        if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
-        if (p.octave == 0) {
+        if (p.octave == level && class_id < mnFeaturesPerLevel1[level]) {
             // mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
             mvKeys1.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, class_id++));
-            mvvKeys1[0].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[0]++));
         }
-        else if (p.octave == 1)
-            mvvKeys1[1].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[1]++));
-        else if (p.octave == 2)
-            mvvKeys1[2].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[2]++));
-        else if (p.octave == 3)
-            mvvKeys1[3].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[3]++));
-        else if (p.octave == 4)
-            mvvKeys1[4].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[4]++));
-        else if (p.octave == 5)
-            mvvKeys1[5].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[5]++));
-        else if (p.octave == 6)
-            mvvKeys1[6].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[6]++));
-        else if (p.octave == 7)
-            mvvKeys1[7].emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, init_id[7]++));
-
-//        if (p.octave == 1)
-//            mvKeys11.emplace_back(cv::KeyPoint(p.pt, p.size, p.angle, p.response, p.octave, p.class_id));
     }
 
 
-    mvvKeypoints1 = orb1->GetmvvKeypoints();
-
-    cout << "显示mvvKeypoints 的信息: " << endl;
-    for(auto &p:mvvKeypoints1)
-    {
-        cout << p.size() << endl;
-    }
-//    mvKeys1 = mvvKeypoints1[level];
+//    mvvKeypoints1 = orb1->GetmvvKeypoints();
+//    cout << "显示mvvKeypoints 的信息: " << endl;
+//    for(auto &p:mvvKeypoints1)
+//    {
+//        cout << p.size() << endl;
+//    }
 
     mDes1 = mDescriptors1.rowRange(0,mnFeaturesPerLevel1[level]).clone();
 
@@ -145,33 +135,8 @@ int main()
 //    imshow("Mat1", feature1);
 //    waitKey(0);
 
-    /// 显示每一层的Mat,并显示特征点
-    for (int i = 0; i < 8; i++)
-    {
-        string name = "Mat" + std::to_string(i);
-        Mat temp;
-        cv::drawKeypoints(mvImageShow1[i], mvvKeys1[i], temp, cv::Scalar::all(-1),
-                          cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
-        imshow(name, temp);
-        waitKey(0);
-    }
 
-//    Mat feature11 = mvImageShow1[1].clone();
-//    cv::drawKeypoints(mvImageShow1[1], mvKeys11, feature11, cv::Scalar::all(-1),
-//                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
-//
-//    imshow("level1", feature11);
-//    imwrite("./figure/level1.png",feature11);
-//    waitKey(0);
-//    // todo : 使用高斯金字塔的尺度不变性,解决圆形ROI内汉明距离存在多个值相同的问题
-//
-//    Mat feature12 = mvImageShow1[2].clone();
-//    cv::drawKeypoints(mvImageShow1[2], mvKeys11, feature12, cv::Scalar::all(-1),
-//                      cv::DrawMatchesFlags::DEFAULT);//DEFAULT  DRAW_OVER_OUTIMG     DRAW_RICH_KEYPOINTS
-//
-//    imshow("level2", feature12);
-//    imwrite("./figure/level2.png",feature12);
-//    waitKey(0);
+    // todo : 使用高斯金字塔的尺度不变性,解决圆形ROI内汉明距离存在多个值相同的问题
     /**************** 图片二：初始化信息 *********************/
     cv::Mat second_image = cv::imread(file2, 0);    // load grayscale image 灰度图
     cv::Mat feature2;
