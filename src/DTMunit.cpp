@@ -483,6 +483,8 @@ void UsingRansac(const int threshold_value,
     Eigen::Isometry3d T21 = T2w * T1w.inverse();
     cout << endl;
 
+    cout << "显示初始匹配与投影真值的距离: " << control_matches.size() << endl;
+    vector<int> counts{0,0,0};  // <=5   5<=10   >10
     for(int index = 0; index < control_matches.size(); ++index) {
 //    int index = 18;
         Eigen::Vector2d p1_debug(mvKeys1[control_matches[index].queryIdx].pt.x,
@@ -495,30 +497,39 @@ void UsingRansac(const int threshold_value,
         Eigen::Vector3d pc2 = T21 * pc1;
 
         float distance = sqrt(pow(p2_debug.x() - pc2.x(), 2) + pow(p2_debug.y() - pc2.y(), 2));
+//        cout << "距离: " << distance << endl;
 
-        if(distance < 10)
-            continue;
-        else {
-            cout << "距离: " << distance << endl;
+        if(distance <= 5)
+            counts[0]++;
+        else if(distance <=10)
+            counts[1]++;
+        else
+            counts[2]++;
 
-//    cout << "坐标: " << pc1(0) << " , " << pc1(1) << endl;
+//        if(distance > 0.001)
+//            continue;
+//        else {
+//            cout << "距离: " << distance << endl;
 
-            Mat temp_1 = feature1.clone();
-            arrowedLine(temp_1, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0), pc1(1) - 30), Scalar(0, 0, 255), 1, 8);        // 原始特征点
-            arrowedLine(temp_1, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0) - 30, pc1(1)), Scalar(0, 0, 255), 1, 8);
-//    circle(temp_1, cv::Point(p1_debug(0),p1_debug(1)), 30, Scalar(255,0,255));     // 原图像
-            imshow("temp1", temp_1);
-//        waitKey(0);
+//              cout << "坐标: " << pc1(0) << " , " << pc1(1) << endl;
 
-            Mat temp_2 = feature2.clone();
-            arrowedLine(temp_2, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0), pc2(1) - 30), Scalar(0, 0, 255), 1, 8);                    // 投影点
-            arrowedLine(temp_2, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0) - 30, pc2(1)), Scalar(0, 0, 255), 1, 8);
-            arrowedLine(temp_2, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0), p2_debug(1) - 30), Scalar(0, 255, 0), 1, 8);     // 匹配点
-            arrowedLine(temp_2, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0) - 30, p2_debug(1)), Scalar(0, 255, 0), 1, 8);
-            imshow("temp2", temp_2);
-            waitKey(0);
-        }
+//            Mat temp_1 = feature1.clone();
+//            arrowedLine(temp_1, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0), pc1(1) - 30), Scalar(0, 0, 255), 1, 8);        // 原始特征点
+//            arrowedLine(temp_1, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0) - 30, pc1(1)), Scalar(0, 0, 255), 1, 8);
+//              circle(temp_1, cv::Point(p1_debug(0),p1_debug(1)), 30, Scalar(255,0,255));     // 原图像
+//            imshow("temp1", temp_1);
+//            waitKey(0);
+
+//            Mat temp_2 = feature2.clone();
+//            arrowedLine(temp_2, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0), pc2(1) - 30), Scalar(0, 0, 255), 1, 8);                    // 投影点
+//            arrowedLine(temp_2, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0) - 30, pc2(1)), Scalar(0, 0, 255), 1, 8);
+//            arrowedLine(temp_2, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0), p2_debug(1) - 30), Scalar(0, 255, 0), 1, 8);     // 匹配点
+//            arrowedLine(temp_2, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0) - 30, p2_debug(1)), Scalar(0, 255, 0), 1, 8);
+//            imshow("temp2", temp_2);
+//            waitKey(0);
+//        }
     }
+    cout << "初始的误匹配点数目(... 5 ... 10 ...): " << counts[0] << " , " << counts[1] << " , " << counts[2] << endl;
     /***************  获取初始匹配之外的点对   **************************/
     vector<Vertex<float > > points1,points2;
     vector<cv::KeyPoint> mvKeys1_(mvKeys1), mvKeys2_(mvKeys2);
@@ -697,6 +708,8 @@ void UsingRansac(const int threshold_value,
     }
 
     /// 对新增点对进行正确性验证
+    cout << "显示新增匹配与投影真值的距离:" << endl;
+    counts = {0,0,0};
     for(int index = 0; index < new_matches.size(); ++index) {
 //    int index = 18;
         Eigen::Vector2d p1_debug(mvKeys1[new_matches[index].queryIdx].pt.x,
@@ -709,36 +722,46 @@ void UsingRansac(const int threshold_value,
         Eigen::Vector3d pc2 = T21 * pc1;
 
         float distance = sqrt(pow(p2_debug.x() - pc2.x(), 2) + pow(p2_debug.y() - pc2.y(), 2));
-        cout << "距离: " << distance << endl;
-        if (distance > 1.0)
-            continue;
-        else {
-            cout << "距离: " << distance << endl;
+//        cout << "距离: " << distance << endl;
+
+        if(distance <= 5)
+            counts[0]++;
+        else if(distance <=10)
+            counts[1]++;
+        else
+            counts[2]++;
+
+//        if (distance > 0.001)
+//            continue;
+//        else {
+//            cout << "距离: " << distance << endl;
 
 //    cout << "坐标: " << pc1(0) << " , " << pc1(1) << endl;
 
-            Mat temp_11 = feature1.clone();
-            arrowedLine(temp_11, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0), pc1(1) - 30), Scalar(0, 0, 255), 1, 8);
-            arrowedLine(temp_11, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0) - 30, pc1(1)), Scalar(0, 0, 255), 1, 8);
+//            Mat temp_11 = feature1.clone();
+//            arrowedLine(temp_11, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0), pc1(1) - 30), Scalar(0, 0, 255), 1, 8);
+//            arrowedLine(temp_11, cv::Point(pc1(0), pc1(1)), cv::Point(pc1(0) - 30, pc1(1)), Scalar(0, 0, 255), 1, 8);
 //    circle(temp_1, cv::Point(p1_debug(0),p1_debug(1)), 30, Scalar(255,0,255));     // 原图像
 //            imshow("temp11", temp_11);
 //        waitKey(0);
 
-            Mat temp_22 = feature2.clone();
-            arrowedLine(temp_22, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0), pc2(1) - 30), Scalar(0, 0, 255), 1, 8);       // 投影点
-            arrowedLine(temp_22, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0) - 30, pc2(1)), Scalar(0, 0, 255), 1, 8);
-            arrowedLine(temp_22, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0), p2_debug(1) - 30), Scalar(0, 255, 0), 1, 8);   // 匹配点
-            arrowedLine(temp_22, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0) - 30, p2_debug(1)), Scalar(0, 255, 0), 1, 8);
+//            Mat temp_22 = feature2.clone();
+//            arrowedLine(temp_22, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0), pc2(1) - 30), Scalar(0, 0, 255), 1, 8);       // 投影点
+//            arrowedLine(temp_22, cv::Point(pc2(0), pc2(1)), cv::Point(pc2(0) - 30, pc2(1)), Scalar(0, 0, 255), 1, 8);
+//            arrowedLine(temp_22, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0), p2_debug(1) - 30), Scalar(0, 255, 0), 1, 8);   // 匹配点
+//            arrowedLine(temp_22, cv::Point(p2_debug(0), p2_debug(1)), cv::Point(p2_debug(0) - 30, p2_debug(1)), Scalar(0, 255, 0), 1, 8);
 //            imshow("temp22", temp_22);
 //            waitKey(0);
 
-            Mat newOpt;   //滤除‘外点’后
-            drawMatches(temp_11,mvKeys1,temp_22,mvKeys2,new_matches,newOpt,Scalar(255,0,0));
-            imshow("newOpt",newOpt);
-            imwrite("./figure/add.png",newOpt);
-            waitKey(0);
-        }
+//            Mat newOpt;   //滤除‘外点’后
+//            drawMatches(temp_11,mvKeys1,temp_22,mvKeys2,new_matches,newOpt,Scalar(255,0,0));
+//            imshow("newOpt",newOpt);
+//            imwrite("./figure/add.png",newOpt);
+//            waitKey(0);
+//        }
     }
+
+    cout << "新增的误匹配点数目(... 5 ... 10 ...): " << counts[0] << " , " << counts[1] << " , " << counts[2] << endl;
 
     /****************  构建DT网络  ************************/
     ///delaunay one
@@ -767,7 +790,7 @@ void UsingRansac(const int threshold_value,
 //    imwrite("./figure/RANSAC.png",afterOpt);
 //    waitKey(0);
 
-//    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
+    cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
 //    Mat newOpt;   //滤除‘外点’后
 //    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
 //    imshow("newOpt",newOpt);

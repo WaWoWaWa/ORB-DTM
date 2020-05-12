@@ -75,7 +75,7 @@ int main()
 
     int level = 0;      // 特定层数得到的源图像
 
-    cout << "显示特征提取的基本信息：" << endl;
+//    cout << "显示特征提取的基本信息：" << endl;
 
 //    vector< vector<cv::KeyPoint> > mvvKeys1;
 //    mvvKeys1.resize(8);
@@ -191,7 +191,7 @@ int main()
     //    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
     //    cout <<"size one:\t" << new_matches.size() << endl;
     /***************  RANSAC 实验对照组  ******************************/
-    cout << "\n采用RANSAC作为control group的实验结果：";
+//    cout << "\n采用RANSAC作为control group的实验结果：";
     //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
     //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );

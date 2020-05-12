@@ -1240,9 +1240,9 @@ namespace ORB_SLAM2
 //            mvvKeypoints[level].emplace_back(keypoints);
         }
 
-        for (int i = 0; i < 8; ++i) {
-            cout << "size: " << allKeypoints[i].size() << " , " << mnFeaturesPerLevel[i] << endl;
-        }
+//        for (int i = 0; i < 8; ++i) {
+//            cout << "size: " << allKeypoints[i].size() << " , " << mnFeaturesPerLevel[i] << endl;
+//        }
     }
 
 /**
