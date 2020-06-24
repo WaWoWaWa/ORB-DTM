@@ -784,16 +784,17 @@ void UsingRansac(const int threshold_value,
 //            line(feature2, Point(e.p1.x, e.p1.y), Point(e.p2.x, e.p2.y), Scalar(0, 0, 255), 1);
 //        }
     /*******************  显示匹配结果  **********************/
-//    Mat afterOpt;   //滤除‘外点’后
-//    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
-//    imshow("control group",afterOpt);
-//    imwrite("./figure/RANSAC.png",afterOpt);
-//    waitKey(0);
+    Mat afterOpt;   //滤除‘外点’后
+    drawMatches(feature1,mvKeys1,feature2,mvKeys2,control_matches,afterOpt,Scalar(0,255,0),Scalar::all(-1),matchesMask);
+    imshow("control group",afterOpt);
+    imwrite("./figure/RANSAC.png",afterOpt);
+    waitKey(0);
 
     cout << "增加结果: " << new_matches.size() << endl;  // 显示内点数目
-//    Mat newOpt;   //滤除‘外点’后
-//    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
-//    imshow("newOpt",newOpt);
-//    imwrite("./figure/add.png",newOpt);
-//    waitKey(0);
+    Mat newOpt;   //滤除‘外点’后
+    drawMatches(Debug_one,mvKeys1,Debug_two,mvKeys2,new_matches,newOpt,Scalar(0,255,0));
+    imshow("newOpt",newOpt);
+    imwrite("./figure/add.png",newOpt);
+    waitKey(0);
+    
 }

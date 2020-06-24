@@ -36,6 +36,14 @@ using namespace ORB_SLAM2;
 /// 主函数
 int main()
 {
+    /// test
+    string strSettingPath = "/home/lu/code/ORB-DTM/config/test.yaml";
+    cv::FileStorage fSettings(strSettingPath, cv::FileStorage::READ);
+    float fx = fSettings["Camera.fx"];
+    cout << "Test: " << fx << endl;
+    string test_name = fSettings["word"];
+    cout << "name: " << test_name << endl;
+
 //    cv::Mat markerImage;
 //    cv::Ptr<cv::aruco::Dictionary> dictionary = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
 //    cv::aruco::drawMarker(dictionary, 23, 200, markerImage, 1);
@@ -195,6 +203,8 @@ int main()
     //    clock_gettime(CLOCK_REALTIME, &time1);
     vector<DMatch> control_matches( BFmatchFunc(mDes1,mDes2,d_ransac_value) );
     //    vector<DMatch> control_matches( KNNmatchFunc(mDes1, mDes2) );
+
+//    cv::evaluateFeatureDetector();
 
     UsingRansac(threshold_value,feature1,feature2,mvKeys1,mvKeys2,mDes1,mDes2,control_matches);
     //    clock_gettime(CLOCK_REALTIME, &time2);

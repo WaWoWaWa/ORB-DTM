@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/calib3d/calib3d.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
@@ -240,7 +239,6 @@ int main(int argc, char** argv)
     bool isWarpPerspective = 0;
     double ransacReprojThreshold = 3;
 
-
     cout << "< Creating detector, descriptor extractor and descriptor matcher ..." << endl;
     Ptr<FeatureDetector> detector = FeatureDetector::create( "SURF");
     Ptr<DescriptorExtractor> descriptorExtractor = DescriptorExtractor::create( "SURF");
@@ -256,8 +254,8 @@ int main(int argc, char** argv)
     }
 
     cout << "< Reading the images..." << endl;
-    Mat img1 = imread( "1.bmp" );
-    Mat img2 = imread( "7.bmp");
+    Mat img1 = imread( "./data/desk1.png" );
+    Mat img2 = imread( "./data/desk2.png");
     cout << ">" << endl;
 
     if( img1.empty() || (!isWarpPerspective && img2.empty()) )

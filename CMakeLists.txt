@@ -49,5 +49,5 @@ target_link_libraries(test ${PROJECT_NAME})
 add_executable(demo example/demo.cpp)
 target_link_libraries(demo ${PROJECT_NAME})
 
-add_executable(temp temp.cpp)
-target_link_libraries(temp ${PROJECT_NAME})
+#add_executable(temp temp.cpp)
+#target_link_libraries(temp ${PROJECT_NAME})
