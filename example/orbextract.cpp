@@ -182,8 +182,8 @@ int main()
 //    imshow("Mat2", feature2);
 //    waitKey(0);
     /***************   克隆图片   ******************/
-    //    Mat debugOne   = feature1.clone();
-    //    Mat debugTwo   = feature2.clone();
+        Mat debugOne   = feature1.clone();
+        Mat debugTwo   = feature2.clone();
 
     //    cout << "size of key1: " << mvKeys1.size() << endl;
     //    cout << "size of key2: " << mvKeys2.size() << endl;
@@ -192,11 +192,11 @@ int main()
     //    imshow("pic2", feature2);
     //    waitKey(0);
     /***************   特征匹配   *************/
-    //    vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
-    //    cout <<"init size:\t" << good_matches.size() << endl;
+        vector<DMatch> good_matches( BFmatchFunc(mDes1,mDes2,d_max_value) );
+        cout <<"init size:\t" << good_matches.size() << endl;
     //    vector<DMatch> good_matches( KNNmatchFunc(mDes1, mDes2) );
     /***************  构建DT网络  ******************************/
-    //    vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
+        vector<DMatch> new_matches(ComputeDTMunit(m_max_value, good_matches, mvKeys1, mvKeys2, debugOne, debugTwo) );   //5
     //    cout <<"size one:\t" << new_matches.size() << endl;
     /***************  RANSAC 实验对照组  ******************************/
 //    cout << "\n采用RANSAC作为control group的实验结果：";
