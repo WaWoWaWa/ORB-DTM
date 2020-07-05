@@ -57,8 +57,8 @@ int main()
 //    string file2 = "./data/n2.png";
 //    string file1 = "./data/flag1.png";      // 1000 28  15  18 12
 //    string file2 = "./data/flag2.png";
-//    string file1 = "./data/draw1.png";      // 2500 28  15
-//    string file2 = "./data/draw2.png";
+    string file1 = "./data/draw1.png";      // 2500 28  15
+    string file2 = "./data/draw2.png";
 //    string file1 = "./data/graf/img4.ppm";      // 2500 28  15
 //    string file2 = "./data/graf/img5.ppm";
 //    string file1 = "./data/newspaper1.jpg";      // 2500 28  15
@@ -66,8 +66,8 @@ int main()
 //    string file1 = "./data/barks/img3.ppm";      // 2500 28  15
 //    string file2 = "./data/barks/img4.ppm";
 
-    string file1 = "./data/tum/1305031127.411371.png";    // 1500 18  12
-    string file2 = "./data/tum/1305031127.447333.png";
+//    string file1 = "./data/tum/1305031127.411371.png";    // 1500 18  12
+//    string file2 = "./data/tum/1305031127.447333.png";
 
 //    string depth_name = "./data/tum/1305031127.419650.png";
 //    cv::Mat depth_image = cv::imread(depth_name, 0);
